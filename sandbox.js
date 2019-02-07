@@ -3,20 +3,18 @@ const mediary = require('.');
 const { PatchSymbol } = mediary;
 const {inspect} = require('util');
 const log = (...args) => console.log(inspect(args, { depth: null, colors: true }));
+
 const foo = {
-    a: {
-        b: [
-            {
-                c: 'd'
-            }
-        ],
-        e: 'f'
+    bar: {
+        baz: [ 'aaa', 'qux' ],
+        bim: 'bam'
     }
 };
-const bar = mediary(foo);
-log('foo', foo);
-log('bar', bar);
-bar.a.b[0].c = 'z';
-log('foo', foo);
-log('bar', bar);
-log('patch', bar.a.b[0][PatchSymbol]);
+
+const mediatedFoo = mediary(foo);
+mediatedFoo.bar.baz.push('boom');
+delete mediatedFoo.bar.bim;
+
+console.log('foo', foo);
+console.log('mediatedFoo', mediatedFoo); // TODO: solve strange serialization issue... everything works, but looks arrays look doubled up with string indexes when serialized via console.log
+console.log('patch', mediatedFoo.bar.baz[PatchSymbol]);

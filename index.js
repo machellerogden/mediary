@@ -4,13 +4,15 @@ const PatchSymbol = Symbol('@mediary');
 
 module.exports = mediary;
 
+const reduce = (a, fn, s) => Array.isArray(a)
+    ? a.reduce(fn, s || [])
+    : Object.entries(a).reduce((acc, [ k, v ], i, o) => fn(acc, v, k, o), s || {});
+
 function mediary(given) {
     if ([ 'string', 'number', 'boolean' ].includes(typeof given)) return given;
     if (![ '[object Object]', '[object Array]' ].includes(Object.prototype.toString.call(given))) throw new TypeError(`Given value must be a simple object. Received: ${given}`);
     if (given[PatchSymbol]) return given;
-    const mediated = Array.isArray(given)
-        ? given.reduce((acc, v, i) => (acc[i] = mediary(v), acc), [])
-        : Object.entries(given).reduce((acc, [k, v]) => (acc[k] = mediary(v), acc), {});
+    const mediated = reduce(given, (acc, v, i) => (acc[i] = mediary(v), acc));
     const patch = Array.isArray(given)
         ? []
         : {};
@@ -29,41 +31,52 @@ function mediary(given) {
         preventExtensions(target) {
             return Reflect.preventExtensions(patch);
         },
-        get (target, key) {
-            if (key === PatchSymbol) return patch;
-            if (patch[key] != null) return Reflect.get(patch, key);
+        get (target, key, receiver) {
             if (deletions.has(key)) return void 0;
-            return Reflect.get(...arguments);
+            if (key === PatchSymbol) return patch;
+            if (key === 'length' && [ target, patch ].every(v => typeof v[key] === 'number')) {
+                return target.length > patch.length
+                    ? Reflect.get(target, key, patch)
+                    : Reflect.get(patch, key, patch);
+            }
+            if (Reflect.has(patch, key)) return Reflect.get(patch, key, patch)
+            return Reflect.get(target, key, patch);
         },
         getOwnPropertyDescriptor (target, key) {
-            if (deletions.has(key)) return Reflect.getOwnPropertyDescriptor(patch, key);
-            return Reflect.getOwnPropertyDescriptor(Array.isArray(patch)
-                ? [ ...target, ...patch ]
-                : { ...target, ...patch }, key);
+            return (deletions.has(key) || Reflect.has(patch, key))
+                ? Reflect.getOwnPropertyDescriptor(patch, key)
+                : Reflect.getOwnPropertyDescriptor(target, key);
         },
-        // TODO: needs consideration
-        //getPrototypeOf (target) {
-            //return Reflect.getPrototypeOf(patch);
-        //},
-        //setPrototypeOf (target, prototype) {
-            //return Reflect.getPrototypeOf(patch, prototype);
-        //},
+        getPrototypeOf (target) {
+            return Reflect.getPrototypeOf(patch);
+        },
+        setPrototypeOf (target, prototype) {
+            return Reflect.getPrototypeOf(patch, prototype);
+        },
         ownKeys (target) {
-            const withDeletionsOmitted = Object.entries(target).reduce((acc, [k, v]) => {
-                if (!deletions.has(k)) acc[k] = v;
+            const pruned = reduce(target, (acc, v, i) => {
+                if (i === PatchSymbol) return acc;
+                if (!deletions.has(i)) acc[i] = v;
                 return acc;
-            }, Array.isArray(patch) ? [] : {});
-            return Reflect.ownKeys(Array.isArray(patch)
-                ? [ ...withDeletionsOmitted, ...patch ]
-                : { ...withDeletionsOmitted, ...patch })
+            });
+            return Array.from(new Set([
+                ...Reflect.ownKeys(pruned),
+                ...Reflect.ownKeys(patch)
+            ])).sort((a, b) => {
+                if (a === 'length') return 1;
+                if (b === 'length') return -1;
+                return /[0-9]+/.test(a) && /[0-9]+/.test(b)
+                    ? (+a) - (+b)
+                    : 0;
+            });
         },
         has (target, key) {
-            if (key in patch) return true;
             if (deletions.has(key)) return false;
-            return Reflect.has(target, key);
+            if (key === PatchSymbol) return false;
+            return Reflect.has(patch, key) || Reflect.has(target, key);
         },
-        set (target, key, value) {
-            return Reflect.set(patch, key, value);
+        set (target, key, value, receiver) {
+            return Reflect.set(patch, key, mediary(value), patch);
         }
     };
     return new Proxy(mediated, handler);
