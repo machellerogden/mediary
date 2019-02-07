@@ -4,9 +4,12 @@
   "description": "An object immutability helper",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava index.spec.js"
   },
   "keywords": [],
   "author": "Mac Heller-Ogden",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "ava": "^1.2.1"
+  }
 }
