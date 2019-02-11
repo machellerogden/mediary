@@ -6,8 +6,8 @@
 ## Usage
 
 ```js
-const mediary = require('mediary');
-const { PatchSymbol } = mediary;
+const Mediary = require('mediary');
+const { PatchSymbol } = Mediary;
 
 const foo = {
     bar: {
@@ -15,10 +15,11 @@ const foo = {
     }
 };
 
-const mediatedFoo = mediary(foo);
+const mediatedFoo = Mediary(foo);
 mediatedFoo.bar.baz = 'boom';
 
 console.log(foo);
 console.log(mediatedFoo);
+console.log(mediatedFoo[PatchSymbol]);
 console.log(mediatedFoo.bar[PatchSymbol]);
 ```

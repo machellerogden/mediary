@@ -1,13 +1,13 @@
 'use strict';
 
 import test from 'ava';
-import mediary, { PatchSymbol } from '.';
+import Mediary, { PatchSymbol } from '.';
 
 test('shallow mediation', t => {
     const foo = {
         a: 'b'
     };
-    const bar = mediary(foo);
+    const bar = Mediary(foo);
     bar.a = 'c';
     bar.b = 'd';
     t.is(foo.a, 'b');
@@ -25,7 +25,7 @@ test('deep mediation', t => {
             e: 'f'
         }
     };
-    const bar = mediary(foo);
+    const bar = Mediary(foo);
     bar.a.b[0].c = 'z';
     bar.a.e = 'z';
     t.is(foo.a.b[0].c, 'd');
@@ -45,7 +45,7 @@ test('push', t => {
             e: 'f'
         }
     };
-    const bar = mediary(foo);
+    const bar = Mediary(foo);
     bar.a.b.push('new value');
     t.deepEqual(foo.a.b, [ { c: 'd' } ]);
     t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
@@ -54,16 +54,16 @@ test('push', t => {
 
 test('spread', t => {
     const foo = {
-        something: {
-            a: 'a',
-            b: 'b'
+        a: {
+            b: 'b',
+            c: 'c'
         }
     };
-    const bar = mediary(foo);
-    bar.something = { ...bar.something, ...{ c: 'c'} };
-    t.deepEqual(foo.something, { a: 'a', b: 'b' });
-    t.deepEqual(bar.something, { a: 'a', b: 'b', c: 'c' });
-    t.deepEqual(foo, { something: { a: 'a', b: 'b' } });
-    // TODO: consider using something like deep-object-diff detailed patching to make this stuff more efficient
-    t.deepEqual(bar[PatchSymbol], { something: { a: 'a', b: 'b', c: 'c' } });
+    const bar = Mediary(foo);
+    bar.a = { ...bar.a, ...{ d: 'd'} };
+    t.deepEqual(foo.a, { b: 'b', c: 'c' });
+    t.deepEqual(bar.a, { b: 'b', c: 'c', d: 'd' });
+    t.deepEqual(foo, { a: { b: 'b', c: 'c' } });
+    t.deepEqual(bar[PatchSymbol], { a: { b: 'b', c: 'c', d: 'd' } });
+    t.deepEqual(bar.a[PatchSymbol], {});
 });

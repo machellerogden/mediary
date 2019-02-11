@@ -1,18 +1,18 @@
 'use strict';
 
-const PatchSymbol = Symbol('@mediary');
+const PatchSymbol = Symbol('@mediary.patch');
 
-module.exports = mediary;
+module.exports = Mediary;
 
 const reduce = (a, fn, s) => Array.isArray(a)
     ? a.reduce(fn, s || [])
     : Object.entries(a).reduce((acc, [ k, v ], i, o) => fn(acc, v, k, o), s || {});
 
-function mediary(given) {
+function Mediary(given) {
     if ([ 'string', 'number', 'boolean' ].includes(typeof given)) return given;
     if (![ '[object Object]', '[object Array]' ].includes(Object.prototype.toString.call(given))) throw new TypeError(`Given value must be a simple object. Received: ${given}`);
     if (given[PatchSymbol]) return given;
-    const mediated = reduce(given, (acc, v, i) => (acc[i] = mediary(v), acc));
+    const mediated = reduce(given, (acc, v, i) => (acc[i] = Mediary(v), acc));
     const patch = Array.isArray(given)
         ? []
         : {};
@@ -35,6 +35,7 @@ function mediary(given) {
             if (deletions.has(key)) return void 0;
             if (key === PatchSymbol) return patch;
             if (key === 'length' && [ target, patch ].every(v => typeof v[key] === 'number')) {
+                // if getting length, always return longer of `target` or `patch`
                 return target.length > patch.length
                     ? Reflect.get(target, key, patch)
                     : Reflect.get(patch, key, patch);
@@ -76,10 +77,10 @@ function mediary(given) {
             return Reflect.has(patch, key) || Reflect.has(target, key);
         },
         set (target, key, value, receiver) {
-            return Reflect.set(patch, key, mediary(value), patch);
+            return Reflect.set(patch, key, Mediary(value), patch);
         }
     };
     return new Proxy(mediated, handler);
 }
 
-mediary.PatchSymbol = PatchSymbol;
+Mediary.PatchSymbol = PatchSymbol;
