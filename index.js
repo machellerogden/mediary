@@ -8,10 +8,24 @@ const reduce = (a, fn, s) => Array.isArray(a)
     ? a.reduce(fn, s || [])
     : Object.entries(a).reduce((acc, [ k, v ], i, o) => fn(acc, v, k, o), s || {});
 
+const isPrimitive = v => [
+    'string',
+    'number',
+    'boolean'
+].includes(typeof v);
+
+const isValidObject = v => [
+    '[object Object]',
+    '[object Array]'
+].includes(Object.prototype.toString.call(v));
+
 function Mediary(given) {
-    if ([ 'string', 'number', 'boolean' ].includes(typeof given)) return given;
-    if (![ '[object Object]', '[object Array]' ].includes(Object.prototype.toString.call(given))) throw new TypeError(`Given value must be a simple object. Received: ${given}`);
-    if (given[PatchSymbol]) return given;
+    if (isPrimitive(given))
+        return given;
+    if (!isValidObject(given))
+        throw new TypeError(`Given value must be a plain object or array. Received: ${given}`);
+    if (given[PatchSymbol])
+        return given;
     const mediated = reduce(given, (acc, v, i) => (acc[i] = Mediary(v), acc));
     const patch = Array.isArray(given)
         ? []
@@ -35,12 +49,11 @@ function Mediary(given) {
             if (deletions.has(key)) return void 0;
             if (key === PatchSymbol) return patch;
             if (key === 'length' && [ target, patch ].every(v => typeof v[key] === 'number')) {
-                // if getting length, always return longer of `target` or `patch`
                 return target.length > patch.length
                     ? Reflect.get(target, key, patch)
                     : Reflect.get(patch, key, patch);
             }
-            if (Reflect.has(patch, key)) return Reflect.get(patch, key, patch)
+            if (Reflect.has(patch, key)) return Reflect.get(patch, key, patch);
             return Reflect.get(target, key, patch);
         },
         getOwnPropertyDescriptor (target, key) {
