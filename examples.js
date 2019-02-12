@@ -1,12 +1,7 @@
-# Mediary
-
-> An object immutability helper
-
-
-```js
+'use strict'
 // require Mediary
 
-const Mediary = require('mediary');
+const Mediary = require('.');
 
 const foo = {
     bar: {
@@ -43,7 +38,7 @@ assert(mediatedFoo.bar.baz[PatchSymbol], [ void 0, 'boom' ]);
 
 // A sparse array is defined in this case, show that this was the only new object representation overlayed on the original data.
 
-// Mediary can even create efficient patches for changes which arrive via the native spread operator.
+// Mediary can even efficiently create patches for changes which arrive via the native spread operator.
 
 mediatedFoo.bar = { ...mediatedFoo.bar, ...{ bam: 'boom' } };
 
@@ -59,6 +54,3 @@ try {
     console.log(e.message);
     // => { bar: { baz: [ 'qux', 'boom', '0': 'qux', '1': 'boom' ], bam: 'boom' } } deepEqual { bar: { baz: [ 'qux', 'boom' ] }, bam: 'boom' } 
 }
-
-// In practice, this has no negative effects, but is being worked on.
-```

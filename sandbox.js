@@ -16,5 +16,5 @@ mediatedFoo.bar.baz.push('boom');
 delete mediatedFoo.bar.bim;
 
 console.log('foo', foo);
-console.log('mediatedFoo', mediatedFoo); // TODO: solve strange log serialization issue... everything works, but looks arrays look doubled up with string indexes when serialized via console.log
+console.log('mediatedFoo', mediatedFoo); // TODO: solve strange console.log serialization issue... everything works, but looks arrays look doubled up with string indexes when serialized via console.log
 console.log('patch', mediatedFoo.bar.baz[PatchSymbol]);

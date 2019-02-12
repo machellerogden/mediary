@@ -19,6 +19,25 @@ const isValidObject = v => [
     '[object Array]'
 ].includes(Object.prototype.toString.call(v));
 
+function set(target, key, value, receiver, patch) {
+    if (isPrimitive(value)) {
+        return Reflect.set(patch, key, value, patch);
+    } else if (isValidObject(value)){
+        if (!Reflect.has(receiver, key) || !isValidObject(receiver[key])) {
+            receiver[key] = Mediary(Array.isArray(value) ? [] : {});
+        }
+        return reduce(value, (acc, v, k) => {
+            if (receiver[key][k] === v) {
+                return acc;
+            } else {
+                let p = receiver[key][PatchSymbol] || Mediary(Array.isArray(v) ? [] : {});
+                return acc && set(receiver[key], k, v, receiver[key], p);
+            }
+        }, true);
+    }
+    return false;
+}
+
 function Mediary(given) {
     if (isPrimitive(given))
         return given;
@@ -90,7 +109,7 @@ function Mediary(given) {
             return Reflect.has(patch, key) || Reflect.has(target, key);
         },
         set (target, key, value, receiver) {
-            return Reflect.set(patch, key, Mediary(value), patch);
+            return set(target, key, value, receiver, patch);
         }
     };
     return new Proxy(mediated, handler);

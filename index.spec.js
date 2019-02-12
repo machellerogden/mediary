@@ -52,7 +52,7 @@ test('push', t => {
     t.deepEqual(bar.a.b[PatchSymbol], [ void 0, 'new value' ]);
 });
 
-test('spread', t => {
+test('spread 1', t => {
     const foo = {
         a: {
             b: 'b',
@@ -64,6 +64,44 @@ test('spread', t => {
     t.deepEqual(foo.a, { b: 'b', c: 'c' });
     t.deepEqual(bar.a, { b: 'b', c: 'c', d: 'd' });
     t.deepEqual(foo, { a: { b: 'b', c: 'c' } });
-    t.deepEqual(bar[PatchSymbol], { a: { b: 'b', c: 'c', d: 'd' } });
+    t.deepEqual(bar[PatchSymbol], {});
+    t.deepEqual(bar.a[PatchSymbol], { d: 'd' });
+});
+
+test('spread 2', t => {
+    const foo = {
+        a: {
+            b: 'b',
+            c: {
+                d: 'd'
+            }
+        }
+    };
+    const bar = Mediary(foo);
+    bar.a.c = { ...bar.a.c, ...{ e: 'e'} };
+    t.deepEqual(foo.a.c, { d: 'd' });
+    t.deepEqual(bar.a.c, { d: 'd', e: 'e' });
+    t.deepEqual(foo, { a: { b: 'b', c: { d: 'd' } } });
+    t.deepEqual(bar[PatchSymbol], {});
     t.deepEqual(bar.a[PatchSymbol], {});
+    t.deepEqual(bar.a.c[PatchSymbol], { e: 'e' });
+});
+
+test('spread 3', t => {
+    const foo = {
+        a: {
+            b: 'b',
+            c: [
+               'd'
+            ]
+        }
+    };
+    const bar = Mediary(foo);
+    bar.a.c = [ ...bar.a.c, 'e' ];
+    t.deepEqual(foo.a.c, [ 'd' ]);
+    t.deepEqual(bar.a.c, [ 'd', 'e' ]);
+    t.deepEqual(foo, { a: { b: 'b', c: [ 'd' ] } });
+    t.deepEqual(bar[PatchSymbol], {});
+    t.deepEqual(bar.a[PatchSymbol], {});
+    t.deepEqual(bar.a.c[PatchSymbol], [ void 0, 'e' ]);
 });
