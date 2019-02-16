@@ -105,3 +105,14 @@ test('spread 3', t => {
     t.deepEqual(bar.a[PatchSymbol], {});
     t.deepEqual(bar.a.c[PatchSymbol], [ void 0, 'e' ]);
 });
+
+test('set an array', t => {
+    const foo = {
+        a: {
+            b: 'b',
+        }
+    };
+    const bar = Mediary(foo);
+    bar.c = [ 'd', 'e' ];
+    t.deepEqual(bar.c, [ 'd', 'e' ]);
+});
