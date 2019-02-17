@@ -1,0 +1,99 @@
+#!/usr/bin/env node
+
+const mediary = require('.');
+
+const { PerformanceObserver, performance } = require('perf_hooks');
+
+const toMB = v => Math.round(v / 1024 / 1024 * 100) / 100;
+
+let previousMemory = process.memoryUsage();
+
+function logMemory(label) {
+    if (label) console.log(label);
+    const used = process.memoryUsage();
+    for (let key in used) console.log(`${key} ${toMB(used[key] - previousMemory[key])} MB`);
+    previousMemory = process.memoryUsage();
+}
+
+(new PerformanceObserver((items) => {
+      process.stdout.write('\n');
+      const { name, duration } = items.getEntries()[0];
+      console.log(name);
+      console.log(duration);
+      logMemory();
+      performance.clearMarks();
+})).observe({ entryTypes: ['measure'] });
+
+// generate test data
+let times = 10000;
+let dataSet = [];
+
+const rndObj = i => [
+    { foo: "foo" },
+    { bar: "bar" },
+    { baz: "baz" },
+    { qux: "qux" }
+][i % 4];
+
+let i = 0;
+while (times > i++) {
+    dataSet.push({
+        foo: "foo",
+        bar: "bar",
+        baz: "bar",
+        qux: "qux",
+        xyzzy: "xyzzy",
+        a: [ ...Array(100) ].map((v, i) => rndObj(i)),
+        b: [ ...Array(100) ].map((v, i) => rndObj(i)),
+        c: [ ...Array(100) ].map((v, i) => rndObj(i)),
+        d: [ ...Array(100) ].map((v, i) => rndObj(i))
+    });
+}
+
+logMemory('initial');
+
+//function test_set_A_mutate() {
+    //let i = 0;
+    //while (times > i) {
+        //let a = dataSet[i];
+        //a.baz = "quz";
+        //i++;
+    //}
+//}
+
+function test_set_A_stringifyParse() {
+    let i = 0;
+    while (times > i) {
+        let a = JSON.parse(JSON.stringify(dataSet[i]));
+        a.baz = "quz";
+        i++;
+    }
+}
+
+function test_set_A_mediary() {
+    let i = 0;
+    while (times > i) {
+        let a = mediary(dataSet[i]);
+        a.baz = "quz";
+        i++;
+    }
+}
+
+
+//performance.mark('mutate_start');
+//test_set_A_mutate();
+//performance.mark('mutate_end');
+//performance.measure('simple object update (mutating)', 'mutate_start', 'mutate_end');
+
+
+performance.mark('stringifyParse_start');
+test_set_A_stringifyParse();
+performance.mark('stringifyParse_end');
+performance.measure('simple object update (stringified clone)', 'stringifyParse_start', 'stringifyParse_end');
+
+
+performance.mark('mediary_start');
+test_set_A_mediary();
+performance.mark('mediary_end');
+performance.measure('simple object update (mediary clone)', 'mediary_start', 'mediary_end');
+

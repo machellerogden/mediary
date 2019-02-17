@@ -2,7 +2,7 @@
 
 const PatchSymbol = Symbol('@mediary.patch');
 
-module.exports = Mediary;
+module.exports = mediary;
 
 const debug = (...a) => process && process.env && process.env.DEBUG && console.log(...a);
 
@@ -28,13 +28,13 @@ const isNumber = n =>
 const getNumericKeys = v =>
     Object.getOwnPropertyNames(v).filter(isNumber).map(Number);
 
-function Mediary(given, freeze) {
+function mediary(given, freeze) {
     if (isPrimitive(given)) return given;
     if (!isSimpleObject(given)) throw new TypeError(`Given value must be a plain object or array. Received: ${given}`);
     if (given[PatchSymbol]) return given;
     if (freeze) Object.freeze(given);
 
-    const mediated = reduce(given, (acc, v, k) => (acc[k] = Object.is(given, v) ? v : Mediary(v, freeze), acc));
+    const mediated = reduce(given, (acc, v, k) => (acc[k] = Object.is(given, v) ? v : mediary(v, freeze), acc));
 
     const patch = Array.isArray(given)
         ? []
@@ -139,7 +139,7 @@ function Mediary(given, freeze) {
                 if (!Reflect.has(receiver, key)
                     // ...or, if pre-existing value at given key on this instance (as resolved by `get` trap) is not a simple object
                     || !isSimpleObject(receiver[key])) {
-                    // then, set patch to array and object based on classification of given value.
+                    // then, update patch with new array or object based on classification of given value.
                     patch[key] = Array.isArray(value) ? [] : {};
                 }
                 // walk given object applying needed updates and return boolean indicating success (per reflection contract)
@@ -159,4 +159,4 @@ function Mediary(given, freeze) {
     return new Proxy(mediated, handler);
 }
 
-Mediary.PatchSymbol = PatchSymbol;
+mediary.PatchSymbol = PatchSymbol;
