@@ -126,10 +126,19 @@ test('spread 4', t => {
         a: {
             b: 'b',
         },
-        c: [ { d: 'd'} ]
+        c: [ { d: 'd' } ]
     };
     const bar = mediary(foo);
     bar.c[0] = { ...bar.c[0], ...{ another: 'entry' } };
+
+    // TODO: this fails because of nested overlay patching ... major issue
+    //t.deepEqual(bar.c, {
+        //a: {
+            //b: 'b',
+        //},
+        //c: [ { d: 'd', another: 'entry' } ]
+    //});
+
     t.deepEqual(bar.c[PatchSymbol], []);
     t.deepEqual(bar.c[0][PatchSymbol], { another: 'entry' });
 });

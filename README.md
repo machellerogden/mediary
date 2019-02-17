@@ -1,5 +1,9 @@
 # Mediary
 
+**WARNING!**
+
+*This is an experiment. Please DO NOT USE this for anything real. Currently, the performance is terrible and it's buggy as all get out.*
+
 > An object immutability helper
 
 

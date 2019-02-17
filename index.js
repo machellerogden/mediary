@@ -1,6 +1,7 @@
 'use strict';
 
 const PatchSymbol = Symbol('@mediary.patch');
+const DeletionsSymbol = Symbol('@mediary.deletions');
 
 module.exports = mediary;
 
@@ -30,7 +31,7 @@ const getNumericKeys = v =>
 
 function mediary(given, freeze) {
     if (isPrimitive(given)) return given;
-    if (!isSimpleObject(given)) throw new TypeError(`Given value must be a plain object or array. Received: ${given}`);
+    if (!isSimpleObject(given)) return given;
     if (given[PatchSymbol]) return given;
     if (freeze) Object.freeze(given);
 
@@ -68,9 +69,11 @@ function mediary(given, freeze) {
             debug('@get');
             if (deletions.has(key)) return void 0;
             if (key === PatchSymbol) return patch;
+            if (key === DeletionsSymbol) return deletions;
             if (key === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
-            if (Reflect.has(patch, key)) return Reflect.get(patch, key, patch);
-            return Reflect.get(target, key, patch);
+            // TODO: handle merged patches
+            if (Reflect.has(patch, key)) return patch[key];
+            return target[key];
         },
 
         getOwnPropertyDescriptor (target, key) {
