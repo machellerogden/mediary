@@ -5,11 +5,13 @@ module.exports = mediary;
 const {
     debug,
     isPrimitive,
-    isPlainObject
+    isPlainObject,
+    reduce
 } = require('./util');
 
 const Sym = Symbol('@mediary');
-const delSym = Symbol('@mediary.delete');
+const SymPatches = Symbol('@mediary.patches');
+const SymPatch = Symbol('@mediary.patch');
 
 const createPatch = (...a) =>
     a.length === 1
@@ -22,7 +24,7 @@ const addPatch = (patches, ...a) =>
 const readPatch = (patches) => {
     return patches.reduce((P, p) => {
         const { A, D, values } = p;
-        P.values = { ...p.values };
+        P.values = { ...P.values, ...p.values };
         if (A) {
             P.D.delete(A);
             P.A.add(A);
@@ -32,7 +34,7 @@ const readPatch = (patches) => {
             delete P.values[D];
         }
         return P;
-    }, { A: new Set(), D: new Set() });
+    }, { A: new Set(), D: new Set(), values: {} });
 };
 
 function mediary(given) {
@@ -44,17 +46,11 @@ function mediary(given) {
 
     const patches = [];
 
-    const mediated = Array.isArray(given)
-        ? given.reduce((acc, v, i) => {
-            acc[i] = mediary(v);
-            addPatch(patches, i, v);
-            return acc;
-          }, [])
-        : Object.entries(given).reduce((acc, [ k, v ]) => {
-            acc[k] = mediary(v);
-            addPatch(patches, k, v);
-            return acc;
-          }, {});
+    const mediated = reduce(given, (acc, v, k) => {
+        acc[k] = mediary(v);
+        addPatch(patches, k, acc[k]);
+        return acc;
+    });
 
     const handler = {
 
@@ -81,9 +77,10 @@ function mediary(given) {
         get (target, key, receiver) {
             debug('@get');
             if (key === Sym) return true;
+            if (key === SymPatches) return patches;
             const patch = readPatch(patches);
-            console.log('@get - patch', patch)
-            return Reflect.get(patch, key, receiver);
+            if (key === SymPatch) return patch;
+            return Reflect.get(patch.values, key, receiver);
         },
 
         getOwnPropertyDescriptor (target, key) {
@@ -103,12 +100,12 @@ function mediary(given) {
 
         ownKeys (target) {
             debug('@ownKeys');
-            return Reflect.ownKeys(target);
+            return [ ...readPatch(patches).A ].map(v => '' + v);
         },
 
         has (target, key) {
             debug('@has');
-            return Reflect.has(target, key);
+            return readPatch(patches).A.has(key);
         },
 
         set (target, key, value, receiver) {
@@ -124,16 +121,5 @@ function mediary(given) {
 }
 
 mediary.Sym = Sym;
-
-const foo = mediary({
-    first: {
-        a: "a",
-        b: "b"
-    },
-    second: {
-        a: "a",
-        b: "b"
-    }
-});
-
-debugger;
+mediary.SymPatches = SymPatches;
+mediary.SymPatch = SymPatch;
