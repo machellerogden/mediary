@@ -10,9 +10,10 @@ const {
     toArray
 } = require('./util');
 
-const Sym = Symbol('@mediary');
-const SymPatches = Symbol('@mediary.patches');
-const SymPatch = Symbol('@mediary.patch');
+const Sym = Symbol('mediary');
+const SymTarget = Symbol('mediary.target');
+const SymPatches = Symbol('mediary.patches');
+const SymPatch = Symbol('mediary.patch');
 
 const createPatch = (...a) =>
     a.length === 1
@@ -53,70 +54,71 @@ function mediary(given) {
     const isArray = Array.isArray(given);
 
     const mediated = reduce(given, (acc, v, k) => {
-        acc[k] = mediary(v);
-        addPatch(patches, k, acc[k], isArray);
+        acc[k] = mediary(v); // TODO: lazy mediation? is it even possible? i think not if we want the behavior we're looking for
+        addPatch(patches, k, acc[k], isArray); // TODO: WIP - right now, it's worse than deep clone when handled this way... but a first step
         return acc;
     });
 
     const handler = {
 
         defineProperty(target, key, attr) {
-            debug('@defineProperty');
+            debug('#defineProperty');
             return Reflect.defineProperty(target, key, attr);
         },
 
         deleteProperty(target, key) {
-            debug('@deleteProperty');
+            debug('#deleteProperty');
             return addPatch(patches, key);
         },
 
         isExtensible(target) {
-            debug('@isExtensible');
+            debug('#isExtensible');
             return Reflect.isExtensible(target);
         },
 
         preventExtensions(target) {
-            debug('@preventExtensions');
+            debug('#preventExtensions');
             return Reflect.preventExtensions(target);
         },
 
         get (target, key, receiver) {
-            debug('@get');
+            debug('#get');
             if (key === Sym) return true;
             if (key === SymPatches) return patches;
+            if (key === SymTarget) return given;
             const patch = readPatch(patches);
             if (key === SymPatch) return patch;
             return Reflect.get(patch.values, key, receiver);
         },
 
         getOwnPropertyDescriptor (target, key) {
-            debug('@getOwnPropertyDescriptor');
+            debug('#getOwnPropertyDescriptor');
             return Reflect.getOwnPropertyDescriptor(target, key);
         },
 
         getPrototypeOf (target) {
-            debug('@getPrototypeOf');
+            debug('#getPrototypeOf');
             return Reflect.getPrototypeOf(target);
         },
 
         setPrototypeOf (target, prototype) {
-            debug('@setPrototypeOf');
+            debug('#setPrototypeOf');
             return Reflect.getPrototypeOf(target, prototype);
         },
 
         ownKeys (target) {
-            debug('@ownKeys');
+            debug('#ownKeys');
             const patch = readPatch(patches);
             return Reflect.ownKeys(patch.values);
         },
 
         has (target, key) {
-            debug('@has');
+            debug('#has');
             return readPatch(patches).A.has(key);
         },
 
         set (target, key, value, receiver) {
-            debug('@set');
+            debug('#set');
             return addPatch(patches, key, value, isArray);
         }
 
