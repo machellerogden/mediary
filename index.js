@@ -13,9 +13,10 @@ const plainObjects = new Set([ '[object Object]', '[object Array]' ]);
 const isPrimitive = v => primitives.has(v);
 const isPlainObject = v => plainObjects.has(Object.prototype.toString.call(v));
 
-const createPatch = (key, value) => value === delSym
-    ? { D: [ key ] }
-    : { A: [ key, value ] };
+const addPatch = (patches, key, value) => (patches.push(
+    value === delSym
+        ? { D: [ key ] }
+        : { A: [ key, value ] }), true);
 
 const readPatch = (patches) => {
     return patches.reduce((P, p) => {
@@ -40,7 +41,6 @@ function mediary(given) {
 
     const patches = [];
 
-
     const mediated = Array.isArray(given)
         ? given.reduce((acc, v, i) => {
             acc[i] = mediary(v);
@@ -60,10 +60,7 @@ function mediary(given) {
 
         deleteProperty(target, key) {
             debug('@deleteProperty');
-            const patch = createPatch(key, value, true);
-            patches.push(patch);
-            return true;
-            return Reflect.deleteProperty(target, key);
+            return addPatch(patches, key, delSym);
         },
 
         isExtensible(target) {
@@ -79,6 +76,7 @@ function mediary(given) {
         get (target, key, receiver) {
             debug('@get');
             if (key === Sym) return true;
+            const patch = readPatch(patches);
             return Reflect.get(target, key, receiver);
         },
 
@@ -109,10 +107,7 @@ function mediary(given) {
 
         set (target, key, value, receiver) {
             debug('@set');
-            // TODO: handle deep patches
-            const patch = createPatch(key, value);
-            patches.push(patch);
-            return true;
+            return addPatch(patches, key, value);
         }
 
     }
