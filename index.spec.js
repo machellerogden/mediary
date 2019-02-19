@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import mediary, { PatchSymbol } from '.';
+import { mediary, clone, Sym, SymMeta } from '.';
 
 test('shallow', t => {
     const foo = {
@@ -32,6 +32,8 @@ test('deep', t => {
     t.is(bar.a.b[0].c, 'z');
     t.is(foo.a.e, 'f');
     t.is(bar.a.e, 'z');
+    t.true(bar.a.b[0][SymMeta].ownKeys().has('c'));
+    t.true(bar.a[SymMeta].ownKeys().has('e'));
 });
 
 test('push 1', t => {
@@ -45,7 +47,7 @@ test('push 1', t => {
     bar.c.push('d');
     t.deepEqual(foo.c, [ 'c' ]);
     t.deepEqual(bar.c, [ 'c', 'd' ]);
-    t.deepEqual(bar.c[PatchSymbol], [ void 0, 'd' ]);
+    t.true(bar.c[SymMeta].ownKeys().has('1'));
 });
 
 
@@ -64,7 +66,21 @@ test('push 2', t => {
     bar.a.b.push('new value');
     t.deepEqual(foo.a.b, [ { c: 'd' } ]);
     t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
-    t.deepEqual(bar.a.b[PatchSymbol], [ void 0, 'new value' ]);
+    t.true(bar.a.b[SymMeta].ownKeys().has('1'));
+});
+
+test('change length', t => {
+    const foo = {
+        a: {
+            b: [ 1, 2, 3 ]
+        }
+    };
+    const bar = mediary(foo);
+    bar.a.b.length = 1;
+    t.deepEqual(foo.a.b, [ 1, 2, 3 ]);
+    t.is(foo.a.b.length, 3);
+    t.is(bar.a.b.length, 1);
+    t.deepEqual(bar.a.b, [ 1 ]);
 });
 
 test('spread 1', t => {
@@ -79,8 +95,7 @@ test('spread 1', t => {
     t.deepEqual(foo.a, { b: 'b', c: 'c' });
     t.deepEqual(bar.a, { b: 'b', c: 'c', d: 'd' });
     t.deepEqual(foo, { a: { b: 'b', c: 'c' } });
-    t.deepEqual(bar[PatchSymbol], {});
-    t.deepEqual(bar.a[PatchSymbol], { d: 'd' });
+    t.true(bar[SymMeta].ownKeys().has('a'));
 });
 
 test('spread 2', t => {
@@ -97,9 +112,7 @@ test('spread 2', t => {
     t.deepEqual(foo.a.c, { d: 'd' });
     t.deepEqual(bar.a.c, { d: 'd', e: 'e' });
     t.deepEqual(foo, { a: { b: 'b', c: { d: 'd' } } });
-    t.deepEqual(bar[PatchSymbol], {});
-    t.deepEqual(bar.a[PatchSymbol], {});
-    t.deepEqual(bar.a.c[PatchSymbol], { e: 'e' });
+    t.true(bar.a[SymMeta].ownKeys().has('c'));
 });
 
 test('spread 3', t => {
@@ -116,9 +129,7 @@ test('spread 3', t => {
     t.deepEqual(foo.a.c, [ 'd' ]);
     t.deepEqual(bar.a.c, [ 'd', 'e' ]);
     t.deepEqual(foo, { a: { b: 'b', c: [ 'd' ] } });
-    t.deepEqual(bar[PatchSymbol], {});
-    t.deepEqual(bar.a[PatchSymbol], {});
-    t.deepEqual(bar.a.c[PatchSymbol], [ void 0, 'e' ]);
+    t.true(bar.a[SymMeta].ownKeys().has('c'));
 });
 
 test('spread 4', t => {
@@ -131,50 +142,54 @@ test('spread 4', t => {
     const bar = mediary(foo);
     bar.c[0] = { ...bar.c[0], ...{ another: 'entry' } };
 
-    // TODO: this fails because of nested overlay patching ... major issue
-    //t.deepEqual(bar.c, {
-        //a: {
-            //b: 'b',
-        //},
-        //c: [ { d: 'd', another: 'entry' } ]
-    //});
+    t.deepEqual(bar.a, {
+        b: 'b',
+    });
 
-    t.deepEqual(bar.c[PatchSymbol], []);
-    t.deepEqual(bar.c[0][PatchSymbol], { another: 'entry' });
+    t.deepEqual(bar.c, [
+        {
+            d: 'd',
+            another: 'entry'
+        }
+    ]);
+
+    t.true(bar.c[SymMeta].ownKeys().has('0'));
 });
 
 test('set an array', t => {
     const foo = {
         a: {
-            b: 'b',
+            b: 'b'
         }
     };
     const bar = mediary(foo);
     bar.c = [ 'c', 'd' ];
     t.deepEqual(bar.c, [ 'c', 'd' ]);
-    t.deepEqual(bar[PatchSymbol], { c: [ 'c', 'd' ] });
+    t.true(bar[SymMeta].ownKeys().has('c'));
 });
 
 test('base array', t => {
     const foo = [
         {
-            a: 'a',
+            a: 'a'
         }
     ];
     const bar = mediary(foo);
     bar[1] = 'b';
-    t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
-    t.deepEqual(bar[PatchSymbol], [ void 0, 'b' ]);
+    t.deepEqual(bar[0], { a: 'a' });
+    t.deepEqual(bar[1], 'b');
+    t.deepEqual(bar.length, 2);
+    t.true(bar[SymMeta].ownKeys().has('1'));
 });
 
 test('base array 2', t => {
     const foo = [
         {
-            a: 'a',
+            a: 'a'
         }
     ];
     const bar = mediary(foo);
     bar.push('b');
     t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
-    t.deepEqual(bar[PatchSymbol], [ void 0, 'b' ]);
+    t.true(bar[SymMeta].ownKeys().has('1'));
 });

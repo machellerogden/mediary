@@ -1,165 +1,185 @@
 'use strict';
 
-const PatchSymbol = Symbol('@mediary.patch');
-const DeletionsSymbol = Symbol('@mediary.deletions');
+const {
+    debug,
+    reduce,
+    toArray,
+    lengthFromKeys,
+    deepFreeze
+} = require('./util');
 
-module.exports = mediary;
+const Sym = Symbol('mediary');
+const SymMeta = Symbol('mediary.meta');
 
-const debug = (...a) => process && process.env && process.env.DEBUG && console.log(...a);
+function mediary(given) {
+    if (given == null
+        || typeof given !== 'object'
+        || given[Sym]
+        || !(Object.is(given.constructor, Object) || Object.is(given.constructor, Array)))
+        return given;
 
-const reduce = (a, fn, s) => Array.isArray(a)
-    ? a.reduce(fn, s || [])
-    : Object.entries(a).reduce((acc, [ k, v ], i, o) => fn(acc, v, k, o), s || {});
+    deepFreeze(given);
 
-const isPrimitive = v => [
-    'undefined',
-    'string',
-    'number',
-    'boolean'
-].includes(typeof v);
-
-const isSimpleObject = v => [
-    '[object Object]',
-    '[object Array]'
-].includes(Object.prototype.toString.call(v));
-
-const isNumber = n =>
-    !isNaN(parseInt(n, 10)) && isFinite(n);
-
-const getNumericKeys = v =>
-    Object.getOwnPropertyNames(v).filter(isNumber).map(Number);
-
-function mediary(given, freeze) {
-    if (isPrimitive(given)) return given;
-    if (!isSimpleObject(given)) return given;
-    if (given[PatchSymbol]) return given;
-    if (freeze) Object.freeze(given);
-
-    const mediated = reduce(given, (acc, v, k) => (acc[k] = Object.is(given, v) ? v : mediary(v, freeze), acc));
-
-    const patch = Array.isArray(given)
-        ? []
-        : {};
-
+    const isArray = Array.isArray(given);
+    const givenKeys = Reflect.ownKeys(given);
+    const patch = isArray ? [] : {};
+    const additions = new Set();
     const deletions = new Set();
+    const ownKeys = () => new Set([
+        ...additions,
+        ...givenKeys.filter(k => !deletions.has(k))
+    ]);
 
-    const handler = {
+    const changes = {
+        add (p) {
+            additions.add(String(p)),
+            deletions.delete(String(p))
+        },
+        delete (p) {
+            deletions.add(String(p)),
+            additions.delete(String(p))
+        },
+        added (p) {
+            return additions.has(String(p));
+        },
+        deleted (p) {
+            return deletions.has(String(p));
+        },
+        touched (p) {
+            return additions.has(String(p)) || deletions.has(String(p));
+        }
+    };
 
-        defineProperty(target, key, attr) {
-            return Reflect.defineProperty(patch, key, attr);
+    const meta = {
+        target: given,
+        additions,
+        deletions,
+        patch,
+        isArray,
+        ownKeys
+    };
+
+    return new Proxy(patch, {
+
+        defineProperty(target, prop, attr) {
+            changes.add(prop);
+            return Reflect.defineProperty(target, prop, attr);
         },
 
-        deleteProperty(target, key) {
-            debug('@deleteProperty');
-            deletions.add(key);
-            return Reflect.deleteProperty(patch, key);
-        },
-
-        isExtensible(target) {
-            debug('@isExtensible');
-            return Reflect.isExtensible(patch);
-        },
-
-        preventExtensions(target) {
-            debug('@preventExtensions');
-            return Reflect.preventExtensions(patch);
-        },
-
-        get (target, key, receiver) {
-            debug('@get');
-            if (deletions.has(key)) return void 0;
-            if (key === PatchSymbol) return patch;
-            if (key === DeletionsSymbol) return deletions;
-            if (key === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
-            // TODO: handle merged patches
-            if (Reflect.has(patch, key)) return patch[key];
-            return target[key];
-        },
-
-        getOwnPropertyDescriptor (target, key) {
-            debug('@getOwnPropertyDescriptor');
-            if (process.env.DEBUG) console.log('@getOwnPropertyDescriptor');
-            return (deletions.has(key) || Reflect.has(patch, key))
-                ? Reflect.getOwnPropertyDescriptor(patch, key)
-                : Reflect.getOwnPropertyDescriptor(target, key);
+        deleteProperty(target, prop) {
+            changes.delete(prop);
+            return Reflect.deleteProperty(target, prop);
         },
 
         getPrototypeOf (target) {
-            debug('@getPrototypeOf');
-            if (process && process.env && process.env.DEBUG) console.log('@getOwnProperty');
-            return Reflect.getPrototypeOf(patch);
+            return Reflect.getPrototypeOf(target);
         },
 
         setPrototypeOf (target, prototype) {
-            debug('@setPrototypeOf');
-            if (process.env.DEBUG) console.log('@getOwnPropertyDescriptor');
-            return Reflect.getPrototypeOf(patch, prototype);
+            return Reflect.getPrototypeOf(target, prototype);
         },
 
         ownKeys (target) {
-            debug('@ownKeys');
-            const pruned = reduce(target, (acc, v, k) => {
-                if (k === PatchSymbol) return acc;
-                if (!deletions.has(k)) acc[k] = v;
-                return acc;
-            });
-
-            return Array.from(new Set([
-                ...Reflect.ownKeys(pruned),
-                ...Reflect.ownKeys(patch)
-            // TODO: determine is it's absolutely necessary to order the keys for arrays...
-            ])).sort((a, b) => {
-                if (a === 'length') return 1;
-                if (b === 'length') return -1;
-                return /[0-9]+/.test(a) && /[0-9]+/.test(b)
-                    ? (+a) - (+b)
-                    : 0;
-            });
+            return [ ...ownKeys() ];
         },
 
-        has (target, key) {
-            debug('@has');
-            if (deletions.has(key)) return false;
-            if (key === PatchSymbol) return false;
-            return Reflect.has(patch, key) || Reflect.has(target, key);
+        has (target, prop) {
+            return !changes.deleted(prop)
+                ? ownKeys().has(prop)
+                : Reflect.has(Reflect.getPrototypeOf(given), prop);
         },
 
-        set (target, key, value, receiver) {
-            debug('@set');
-            // here be dragons... meta-reflections ahead. tred carefully.
+        getOwnPropertyDescriptor (target, prop) {
+            if (changes.deleted(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
 
-            if (key === 'length' && Array.isArray(receiver)) { // reflect on proxy instance
-                if (typeof value !== 'number') throw new TypeError('length must be a number');
-                const length = receiver.length; // reflect via `get` trap
-                for (let i = value; i < length; i++) delete receiver[i]; // delegates to `deleteProperty` trap
-                for (let i = value; i > length; i--) receiver.push(void 0); // recursion! triggers `set` trap again as well as `get` and `ownKeys`
+            const desc = Reflect.has(target, prop)
+                ? Reflect.getOwnPropertyDescriptor(target, prop)
+                : Reflect.getOwnPropertyDescriptor(given, prop);
+
+            if (!changes.touched(prop) && givenKeys.includes(prop)) {
+                changes.add(prop);
+                target[prop] = mediary(given[prop]);
             }
 
-            if (isPrimitive(value)) return Reflect.set(patch, key, value, patch);
+            if (isArray && prop === 'length') {
+                return {
+                    writable: true,
+                    configurable: false,
+                    enumerable: false,
+                    value: lengthFromKeys([ ...ownKeys() ])
+                };
+            }
 
-            if (isSimpleObject(value)) {
-                // if proxy doesn't have the key (as resolved by `has` trap)...
-                if (!Reflect.has(receiver, key)
-                    // ...or, if pre-existing value at given key on this instance (as resolved by `get` trap) is not a simple object
-                    || !isSimpleObject(receiver[key])) {
-                    // then, update patch with new array or object based on classification of given value.
-                    patch[key] = Array.isArray(value) ? [] : {};
+            return ownKeys().has(prop)
+                ? { ...desc, writable: true, configurable: true }
+                : void 0;
+        },
+
+        get (target, prop, receiver) {
+            if (prop === Sym) return true;
+            if (prop === SymMeta) return meta;
+            if (changes.deleted(prop)) return void 0;
+            if (prop === 'length' && isArray) {
+                return lengthFromKeys([ ...ownKeys() ]);
+            }
+
+            if (!changes.touched(prop) && givenKeys.includes(prop)) {
+                changes.add(prop);
+                target[prop] = mediary(given[prop]);
+            }
+
+            const value = Reflect.has(target, prop)
+                ? Reflect.get(target, prop)
+                : Reflect.get(given, prop);
+
+            return value;
+        },
+
+        set (target, prop, value, receiver) {
+            if (prop === 'length' && isArray) {
+                const length = lengthFromKeys([ ...ownKeys() ]);
+                const v = parseInt(value, 10);
+                let i = v;
+                while (length > i) {
+                    changes.delete(i);
+                    Reflect.deleteProperty(target, i);
+                    i++;
                 }
-                // walk given object applying needed updates and return boolean indicating success (per reflection contract)
-                return reduce(value, (acc, v, k) => {
-                    let cur = receiver[key][k]; // reflect via `get` trap
-                    // skip identical values
-                    if (cur === v || Object.is(cur, v)) return acc;
-                    return acc && Reflect.set(receiver[key], k, v); // recursion!
-                }, true);
+                i = length;
+                while (v > i) {
+                    changes.add(i);
+                    Reflect.set(target, i, void 0);
+                    i++;
+                }
             }
-
-            // TODO: handle null?
-
-            return false;
+            changes.add(prop);
+            return Reflect.set(target, prop, value, receiver);
         }
-    };
-    return new Proxy(mediated, handler);
+    });
+
 }
 
-mediary.PatchSymbol = PatchSymbol;
+function realize(given) {
+    if (typeof given !== 'object'
+        || !given[Sym]) return given;
+    const {
+        target,
+        patch,
+        ownKeys,
+        isArray
+    } = given[SymMeta];
+    return reduce([ ...ownKeys() ], (acc, k) => {
+        acc[k] = Reflect.has(patch, k)
+            ? patch[k]
+            : target[k];
+        return acc;
+    });
+}
+
+const clone = given => mediary(realize(given));
+
+exports.realize = realize;
+exports.mediary = mediary;
+exports.clone = clone;
+exports.Sym = Sym;
+exports.SymMeta = SymMeta;
