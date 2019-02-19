@@ -2,34 +2,37 @@
 
 module.exports = mediary;
 
-const { debug } = require('./util');
+const {
+    debug,
+    isPrimitive,
+    isPlainObject
+} = require('./util');
 
-const Sym = Symbol('@mediary.is');
+const Sym = Symbol('@mediary');
 const delSym = Symbol('@mediary.delete');
 
-const primitives = new Set([ 'undefined', 'string', 'number', 'boolean' ]);
-const plainObjects = new Set([ '[object Object]', '[object Array]' ]);
+const createPatch = (...a) =>
+    a.length === 1
+        ? { D: a[0] }
+        : { A: a[0], values: { [a[0]]: a[1] } };
 
-const isPrimitive = v => primitives.has(v);
-const isPlainObject = v => plainObjects.has(Object.prototype.toString.call(v));
-
-const addPatch = (patches, key, value) => (patches.push(
-    value === delSym
-        ? { D: [ key ] }
-        : { A: [ key, value ] }), true);
+const addPatch = (patches, ...a) =>
+     (patches.push(createPatch(...a)), true);
 
 const readPatch = (patches) => {
     return patches.reduce((P, p) => {
-        const { A = [], D = [] } = p;
-        const [ Ak, Av ] = A;
-        const [ Dk ] = D;
-        if (Ak) {
-            P[Ak] = Av;
-        } else if (Dk) {
-            delete P[Dk];
+        const { A, D, values } = p;
+        P.values = { ...p.values };
+        if (A) {
+            P.D.delete(A);
+            P.A.add(A);
+        } else if (D) {
+            P.A.delete(D);
+            P.D.add(A);
+            delete P.values[D];
         }
         return P;
-    }, {});
+    }, { A: new Set(), D: new Set() });
 };
 
 function mediary(given) {
@@ -44,10 +47,12 @@ function mediary(given) {
     const mediated = Array.isArray(given)
         ? given.reduce((acc, v, i) => {
             acc[i] = mediary(v);
+            addPatch(patches, i, v);
             return acc;
           }, [])
         : Object.entries(given).reduce((acc, [ k, v ]) => {
             acc[k] = mediary(v);
+            addPatch(patches, k, v);
             return acc;
           }, {});
 
@@ -60,7 +65,7 @@ function mediary(given) {
 
         deleteProperty(target, key) {
             debug('@deleteProperty');
-            return addPatch(patches, key, delSym);
+            return addPatch(patches, key);
         },
 
         isExtensible(target) {
@@ -77,7 +82,8 @@ function mediary(given) {
             debug('@get');
             if (key === Sym) return true;
             const patch = readPatch(patches);
-            return Reflect.get(target, key, receiver);
+            console.log('@get - patch', patch)
+            return Reflect.get(patch, key, receiver);
         },
 
         getOwnPropertyDescriptor (target, key) {
