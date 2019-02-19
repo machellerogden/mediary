@@ -21,3 +21,5 @@ exports.isPlainObject = v => plainObjects.has(Object.prototype.toString.call(v))
 exports.reduce = (a, fn, s) => Array.isArray(a)
     ? a.reduce(fn, s || [])
     : Object.entries(a).reduce((acc, [ k, v ], i, o) => fn(acc, v, k, o), s || {});
+
+exports.toArray = o => Object.entries(o).reduce((acc, [ k, v ]) => (acc[k] = v, acc), []);

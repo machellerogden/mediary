@@ -6,7 +6,8 @@ const {
     debug,
     isPrimitive,
     isPlainObject,
-    reduce
+    reduce,
+    toArray
 } = require('./util');
 
 const Sym = Symbol('@mediary');
@@ -16,15 +17,18 @@ const SymPatch = Symbol('@mediary.patch');
 const createPatch = (...a) =>
     a.length === 1
         ? { D: a[0] }
-        : { A: a[0], values: { [a[0]]: a[1] } };
+        : { A: a[0], values: { [a[0]]: a[1] }, isArray: a[2] };
 
 const addPatch = (patches, ...a) =>
      (patches.push(createPatch(...a)), true);
 
 const readPatch = (patches) => {
     return patches.reduce((P, p) => {
-        const { A, D, values } = p;
-        P.values = { ...P.values, ...p.values };
+        const { A, D, values, isArray } = p;
+        const merged = { ...P.values, ...p.values };
+        P.values = isArray
+            ? toArray(merged)
+            : merged;
         if (A) {
             P.D.delete(A);
             P.A.add(A);
@@ -46,9 +50,11 @@ function mediary(given) {
 
     const patches = [];
 
+    const isArray = Array.isArray(given);
+
     const mediated = reduce(given, (acc, v, k) => {
         acc[k] = mediary(v);
-        addPatch(patches, k, acc[k]);
+        addPatch(patches, k, acc[k], isArray);
         return acc;
     });
 
@@ -100,7 +106,8 @@ function mediary(given) {
 
         ownKeys (target) {
             debug('@ownKeys');
-            return [ ...readPatch(patches).A ].map(v => '' + v);
+            const patch = readPatch(patches);
+            return Reflect.ownKeys(patch.values);
         },
 
         has (target, key) {
@@ -110,7 +117,7 @@ function mediary(given) {
 
         set (target, key, value, receiver) {
             debug('@set');
-            return addPatch(patches, key, value);
+            return addPatch(patches, key, value, isArray);
         }
 
     }
