@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import mediary, { Sym, SymPatches } from '.';
+import mediary, { Sym, SymPatch, SymPatches } from '.';
 
 test('shallow', t => {
     const foo = {
@@ -32,6 +32,16 @@ test('deep', t => {
     t.is(bar.a.b[0].c, 'z');
     t.is(foo.a.e, 'f');
     t.is(bar.a.e, 'z');
+    t.deepEqual(bar.a.b[0][SymPatches][0], {
+        A: 'c',
+        value: 'z',
+        inArray: false
+    });
+    t.deepEqual(bar.a[SymPatches][0], {
+        A: 'e',
+        value: 'z',
+        inArray: false
+    });
 });
 
 test('push 1', t => {
@@ -170,15 +180,18 @@ test('spread 4', t => {
         b: 'b',
     });
 
-    t.deepEqual(bar.c,[
-        { d: 'd', another: 'entry' }
+    t.deepEqual(bar.c, [
+        {
+            d: 'd',
+            another: 'entry'
+        }
     ]);
 
     t.deepEqual(bar.c[SymPatches][0], {
         A: '0',
         value: {
-            d: 'd',
-            another: 'entry'
+            another: 'entry',
+            d: 'd'
         },
         inArray: true
     });
