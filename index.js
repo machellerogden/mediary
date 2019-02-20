@@ -19,20 +19,17 @@ const createPatch = (...a) =>
         ? { D: a[0] }
         : {
             A: a[0],
-            values: { [a[0]]: a[1] },
-            isArray: a[2]
+            value: a[1],
+            inArray: a[2]
         };
 
 const addPatch = (patches, ...a) =>
      (patches.push(createPatch(...a)), true);
 
 const realizePatch = (patches) => patches.reduce((P, p) => {
-    const { A, D, values, isArray } = p;
-    const merged = { ...P.values, ...p.values };
-    P.values = isArray
-        ? toArray(merged)
-        : merged;
+    const { A, D, value, inArray } = p;
     if (A) {
+        P.values[A] = p.value;
         P.D.delete(A);
         P.A.add(A);
     } else if (D) {
@@ -40,6 +37,7 @@ const realizePatch = (patches) => patches.reduce((P, p) => {
         P.D.add(A);
         delete P.values[D];
     }
+    if (inArray) P.values = toArray(P.values);
     return P;
 }, { A: new Set(), D: new Set(), values: {} });
 

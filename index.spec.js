@@ -47,10 +47,8 @@ test('push 1', t => {
     t.deepEqual(bar.c, [ 'c', 'd' ]);
     t.deepEqual(bar.c[SymPatches][0], {
         A: '1',
-        values: {
-            '1': 'd'
-        },
-        isArray: true
+        value: 'd',
+        inArray: true
     });
 });
 
@@ -72,10 +70,8 @@ test('push 2', t => {
     t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
     t.deepEqual(bar.a.b[SymPatches][0], {
         A: '1',
-        values: {
-            '1': 'new value'
-        },
-        isArray: true
+        value: 'new value',
+        inArray: true
     });
 });
 
@@ -106,14 +102,12 @@ test('spread 1', t => {
     t.deepEqual(foo, { a: { b: 'b', c: 'c' } });
     t.deepEqual(bar[SymPatches][0], {
         A: 'a',
-        values: {
-            a: {
-                b: 'b',
-                c: 'c',
-                d: 'd'
-            }
+        value: {
+            b: 'b',
+            c: 'c',
+            d: 'd'
         },
-        isArray: false
+        inArray: false
     });
 });
 
@@ -133,13 +127,11 @@ test('spread 2', t => {
     t.deepEqual(foo, { a: { b: 'b', c: { d: 'd' } } });
     t.deepEqual(bar.a[SymPatches][0], {
         A: 'c',
-        values: {
-            c: { 
-                d: 'd',
-                e: 'e'
-            }
+        value: { 
+            d: 'd',
+            e: 'e'
         },
-        isArray: false
+        inArray: false
     });
 });
 
@@ -159,10 +151,8 @@ test('spread 3', t => {
     t.deepEqual(foo, { a: { b: 'b', c: [ 'd' ] } });
     t.deepEqual(bar.a[SymPatches][0], {
         A: 'c',
-        values: {
-            c: [ 'd', 'e' ]
-        },
-        isArray: false
+        value: [ 'd', 'e' ],
+        inArray: false
     });
 });
 
@@ -186,20 +176,18 @@ test('spread 4', t => {
 
     t.deepEqual(bar.c[SymPatches][0], {
         A: '0',
-        values: {
-            '0': {
-                d: 'd',
-                another: 'entry'
-            }
+        value: {
+            d: 'd',
+            another: 'entry'
         },
-        isArray: true
+        inArray: true
     });
 });
 
 test('set an array', t => {
     const foo = {
         a: {
-            b: 'b',
+            b: 'b'
         }
     };
     const bar = mediary(foo);
@@ -207,15 +195,15 @@ test('set an array', t => {
     t.deepEqual(bar.c, [ 'c', 'd' ]);
     t.deepEqual(bar[SymPatches][0], {
         A: 'c',
-        values: { c: [ 'c', 'd' ] },
-        isArray: false
+        value: [ 'c', 'd' ],
+        inArray: false
     });
 });
 
 test('base array', t => {
     const foo = [
         {
-            a: 'a',
+            a: 'a'
         }
     ];
     const bar = mediary(foo);
@@ -225,17 +213,15 @@ test('base array', t => {
     t.deepEqual(bar.length, 2);
     t.deepEqual(bar[SymPatches][0], {
         A: '1',
-        values: {
-            '1': 'b'
-        },
-        isArray: true
+        value: 'b',
+        inArray: true
     });
 });
 
 test('base array 2', t => {
     const foo = [
         {
-            a: 'a',
+            a: 'a'
         }
     ];
     const bar = mediary(foo);
@@ -243,9 +229,7 @@ test('base array 2', t => {
     t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
     t.deepEqual(bar[SymPatches][0], {
         A: '1',
-        isArray: true,
-        values: {
-            '1': 'b'
-        }
+        value: 'b',
+        inArray: true
     });
 });
