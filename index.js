@@ -3,7 +3,6 @@
 module.exports = mediary;
 
 const {
-    debug,
     isPrimitive,
     isPlainObject,
     reduce,
@@ -47,6 +46,7 @@ function mediary(given) {
         || !isPlainObject(given))
         return given;
 
+    // TODO: cache realized patch using patches.length as key
     const patches = [];
 
     const isArray = Array.isArray(given);
@@ -59,27 +59,25 @@ function mediary(given) {
     const handler = {
 
         defineProperty(target, key, attr) {
-            debug('#defineProperty');
+            // TODO
             return Reflect.defineProperty(target, key, attr);
         },
 
         deleteProperty(target, key) {
-            debug('#deleteProperty');
             return addPatch(patches, key);
         },
 
         isExtensible(target) {
-            debug('#isExtensible');
+            // TODO
             return Reflect.isExtensible(target);
         },
 
         preventExtensions(target) {
-            debug('#preventExtensions');
+            // TODO
             return Reflect.preventExtensions(target);
         },
 
         get (target, key, receiver) {
-            debug('#get');
             if (key === Sym) return true;
             if (key === SymPatches) return patches;
             if (key === SymTarget) return given;
@@ -95,8 +93,6 @@ function mediary(given) {
         },
 
         getOwnPropertyDescriptor (target, key) {
-            debug('#getOwnPropertyDescriptor');
-
             const patch = realizePatch(patches);
             if (patch.A.has(key)) {
                 return Reflect.getOwnPropertyDescriptor(patch.values, key);
@@ -108,17 +104,16 @@ function mediary(given) {
         },
 
         getPrototypeOf (target) {
-            debug('#getPrototypeOf');
+            // TODO
             return Reflect.getPrototypeOf(target);
         },
 
         setPrototypeOf (target, prototype) {
-            debug('#setPrototypeOf');
+            // TODO
             return Reflect.getPrototypeOf(target, prototype);
         },
 
         ownKeys (target) {
-            debug('#ownKeys');
             const patch = realizePatch(patches);
             const keys = [ ...(new Set([
                 ...Reflect.ownKeys(given).filter((v, k) => !patch.D.has(k)),
@@ -128,22 +123,12 @@ function mediary(given) {
         },
 
         has (target, key) {
-            debug('#has');
             const patch = realizePatch(patches);
             return patch.A.has(key) || (!patch.D.has(key) && Reflect.has(target, key)); 
         },
 
         set (target, key, value, receiver) {
-            debug('#set');
-
-            // TODO: handle length change
-            //if (key === 'length' && Array.isArray(receiver)) { // reflect on proxy instance
-                //if (typeof value !== 'number') throw new TypeError('length must be a number');
-                //const length = receiver.length; // reflect via `get` trap
-                //for (let i = value; i < length; i++) delete receiver[i]; // delegates to `deleteProperty` trap
-                //for (let i = value; i > length; i--) receiver.push(void 0); // recursion! triggers `set` trap again as well as `get` and `ownKeys`
-            //}
-
+            // TODO: handle `length` change
             return addPatch(patches, key, value, isArray);
         }
 
