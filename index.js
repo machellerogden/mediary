@@ -17,7 +17,11 @@ const SymPatches = Symbol('mediary.patches');
 const createPatch = (...a) =>
     a.length === 1
         ? { D: a[0] }
-        : { A: a[0], values: { [a[0]]: a[1] }, isArray: a[2] };
+        : {
+            A: a[0],
+            values: { [a[0]]: a[1] },
+            isArray: a[2]
+        };
 
 const addPatch = (patches, ...a) =>
      (patches.push(createPatch(...a)), true);
