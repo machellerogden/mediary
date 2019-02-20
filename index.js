@@ -7,13 +7,13 @@ const {
     isPrimitive,
     isPlainObject,
     reduce,
-    toArray
+    toArray,
+    getNumericKeys
 } = require('./util');
 
 const Sym = Symbol('mediary');
 const SymTarget = Symbol('mediary.target');
 const SymPatches = Symbol('mediary.patches');
-const SymPatch = Symbol('mediary.patch');
 
 const createPatch = (...a) =>
     a.length === 1
@@ -23,24 +23,22 @@ const createPatch = (...a) =>
 const addPatch = (patches, ...a) =>
      (patches.push(createPatch(...a)), true);
 
-const readPatch = (patches) => {
-    return patches.reduce((P, p) => {
-        const { A, D, values, isArray } = p;
-        const merged = { ...P.values, ...p.values };
-        P.values = isArray
-            ? toArray(merged)
-            : merged;
-        if (A) {
-            P.D.delete(A);
-            P.A.add(A);
-        } else if (D) {
-            P.A.delete(D);
-            P.D.add(A);
-            delete P.values[D];
-        }
-        return P;
-    }, { A: new Set(), D: new Set(), values: {} });
-};
+const realizePatch = (patches) => patches.reduce((P, p) => {
+    const { A, D, values, isArray } = p;
+    const merged = { ...P.values, ...p.values };
+    P.values = isArray
+        ? toArray(merged)
+        : merged;
+    if (A) {
+        P.D.delete(A);
+        P.A.add(A);
+    } else if (D) {
+        P.A.delete(D);
+        P.D.add(A);
+        delete P.values[D];
+    }
+    return P;
+}, { A: new Set(), D: new Set(), values: {} });
 
 function mediary(given) {
 
@@ -54,8 +52,7 @@ function mediary(given) {
     const isArray = Array.isArray(given);
 
     const mediated = reduce(given, (acc, v, k) => {
-        acc[k] = mediary(v); // TODO: lazy mediation? is it even possible? i think not if we want the behavior we're looking for
-        addPatch(patches, k, acc[k], isArray); // TODO: WIP - right now, it's worse than deep clone when handled this way... but a first step
+        acc[k] = mediary(v);
         return acc;
     });
 
@@ -86,14 +83,28 @@ function mediary(given) {
             if (key === Sym) return true;
             if (key === SymPatches) return patches;
             if (key === SymTarget) return given;
-            const patch = readPatch(patches);
-            if (key === SymPatch) return patch;
-            return Reflect.get(patch.values, key, receiver);
+            if (key === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
+            const patch = realizePatch(patches);
+            if (patch.D.has(key)) {
+                return void 0;
+            } else if (patch.A.has(key)) {
+                return patch.values[key];
+            } else {
+                return target[key];
+            }
         },
 
         getOwnPropertyDescriptor (target, key) {
             debug('#getOwnPropertyDescriptor');
-            return Reflect.getOwnPropertyDescriptor(target, key);
+
+            const patch = realizePatch(patches);
+            if (patch.A.has(key)) {
+                return Reflect.getOwnPropertyDescriptor(patch.values, key);
+            } else if (!patch.D.has(key) && Reflect.has(target, key)) {
+                return Reflect.getOwnPropertyDescriptor(target, key);
+            } else {
+                return void 0;
+            }
         },
 
         getPrototypeOf (target) {
@@ -108,17 +119,31 @@ function mediary(given) {
 
         ownKeys (target) {
             debug('#ownKeys');
-            const patch = readPatch(patches);
-            return Reflect.ownKeys(patch.values);
+            const patch = realizePatch(patches);
+            const keys = [ ...(new Set([
+                ...Reflect.ownKeys(given).filter((v, k) => !patch.D.has(k)),
+                ...Object.keys(patch.values)
+            ])) ];
+            return keys;
         },
 
         has (target, key) {
             debug('#has');
-            return readPatch(patches).A.has(key);
+            const patch = realizePatch(patches);
+            return patch.A.has(key) || (!patch.D.has(key) && Reflect.has(target, key)); 
         },
 
         set (target, key, value, receiver) {
             debug('#set');
+
+            // TODO: handle length change
+            //if (key === 'length' && Array.isArray(receiver)) { // reflect on proxy instance
+                //if (typeof value !== 'number') throw new TypeError('length must be a number');
+                //const length = receiver.length; // reflect via `get` trap
+                //for (let i = value; i < length; i++) delete receiver[i]; // delegates to `deleteProperty` trap
+                //for (let i = value; i > length; i--) receiver.push(void 0); // recursion! triggers `set` trap again as well as `get` and `ownKeys`
+            //}
+
             return addPatch(patches, key, value, isArray);
         }
 
@@ -131,4 +156,3 @@ function mediary(given) {
 
 mediary.Sym = Sym;
 mediary.SymPatches = SymPatches;
-mediary.SymPatch = SymPatch;

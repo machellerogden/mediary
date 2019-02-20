@@ -23,3 +23,7 @@ exports.reduce = (a, fn, s) => Array.isArray(a)
     : Object.entries(a).reduce((acc, [ k, v ], i, o) => fn(acc, v, k, o), s || {});
 
 exports.toArray = o => Object.entries(o).reduce((acc, [ k, v ]) => (acc[k] = v, acc), []);
+
+exports.isNumber = n => !isNaN(parseInt(n, 10)) && isFinite(n);
+
+exports.getNumericKeys = v => Object.getOwnPropertyNames(v).filter(exports.isNumber).map(Number);
