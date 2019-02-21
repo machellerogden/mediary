@@ -13,35 +13,23 @@ const {
 
 const Sym = Symbol('mediary');
 const SymTarget = Symbol('mediary.target');
-const SymPatch = Symbol('mediary.patch');
-const SymPatches = Symbol('mediary.patches');
+const SymChanges = Symbol('mediary.changes');
+const SymChangelog = Symbol('mediary.changelog');
 
-const createPatch = (...a) =>
-    a.length === 1
-        ? { D: a[0] }
-        : {
-            A: a[0],
-            value: a[1],
-            inArray: a[2]
-        };
+const PropChange = (op, k) => ({ [op]: k });
 
-const realizePatch = (patches) => patches.reduce((P, p) => {
-    const { A, D, value, inArray } = p;
+const realizeChanges = changelog => changelog.reduce((P, { A, D }) => {
     if (A) {
         P.D.delete(A);
         P.A.add(A);
-        P.values[A] = value;
     } else if (D) {
         P.A.delete(D);
         P.D.add(A);
-        delete P.values[D];
     }
-    if (inArray) P.values = toArray(P.values);
     return P;
 }, {
     A: new Set(),
-    D: new Set(),
-    values: {}
+    D: new Set()
 });
 
 
@@ -51,18 +39,21 @@ function mediary(given) {
         || given[Sym])
         return given;
 
-    const mediated = reduce(given, (acc, v, k) => {
-        acc[k] = mediary(v); // TODO: lazy mediation? is it even possible? hate doing this
-        return acc;
-    });
+    const overlay = Object.create(given);
 
-    const patches = [];
+    const changelog = [];
 
-    let patch = realizePatch(patches);
+    let changes = realizeChanges(changelog);
 
-    const updatePatch = (...a) => {
-        patches.push(createPatch(...a));
-        patch = realizePatch(patches);
+    const updateOverlay = (op, prop, value) => {
+        const change = PropChange(op, prop);
+        if (op === 'D') {
+            delete overlay[prop];
+        } else {
+            overlay[prop] = value;
+        }
+        changelog.push(change);
+        changes = realizeChanges(changelog);
         return true;
     };
 
@@ -70,13 +61,13 @@ function mediary(given) {
 
     const handler = {
 
-        defineProperty(target, key, attr) {
+        defineProperty(target, prop, attr) {
             // TODO
-            return Reflect.defineProperty(target, key, attr);
+            return Reflect.defineProperty(target, prop, attr);
         },
 
-        deleteProperty(target, key) {
-            return updatePatch(key);
+        deleteProperty(target, prop) {
+            return updateOverlay('D', prop);
         },
 
         isExtensible(target) {
@@ -89,36 +80,28 @@ function mediary(given) {
             return Reflect.preventExtensions(target);
         },
 
-        get (target, key, receiver) {
-            if (key === Sym) return true;
-            if (key === SymPatch) return patch;
-            if (key === SymPatches) return patches;
-            if (key === SymTarget) return given;
-            if (key === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
+        get (target, prop, receiver) {
+            if (prop === Sym) return true;
+            if (prop === SymChanges) return changes;
+            if (prop === SymChangelog) return changelog;
+            if (prop === SymTarget) return given;
+            // TODO: handle length
+            // if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
 
-            if (patch.D.has(key)) return void 0;
-
-            return patch.A.has(key)
-                ? patch.values[key]
-                : target[key];
+            if (changes.D.has(prop)) return void 0;
+            if (Reflect.has(given, prop)) target[prop] = mediary(given[prop]);
+            return target[prop];
         },
 
-        getOwnPropertyDescriptor (target, key) {
-            let descriptor;
-            if (patch.A.has(key)) {
-                descriptor = Reflect.getOwnPropertyDescriptor(patch.values, key);
-            } else if (!patch.D.has(key) && Reflect.has(target, key)) {
-                descriptor = Reflect.getOwnPropertyDescriptor(target, key);
-            } else {
-                return void 0;
-            }
-            descriptor.value = mediary(descriptor.value);
-            return descriptor;
+        getOwnPropertyDescriptor (target, prop) {
+            if (changes.D.has(prop)) return void 0;
+            if (Reflect.has(given, prop)) target[prop] = mediary(given[prop]);
+            return Reflect.getOwnPropertyDescriptor(target, prop);
         },
 
         getPrototypeOf (target) {
             // TODO
-            return Reflect.getPrototypeOf(target);
+            return Reflect.getPrototypeOf(given);
         },
 
         setPrototypeOf (target, prototype) {
@@ -128,27 +111,26 @@ function mediary(given) {
 
         ownKeys (target) {
             const keys = [ ...(new Set([
-                ...Reflect.ownKeys(given).filter((v, k) => !patch.D.has(k)),
-                ...Object.keys(patch.values)
+                ...Reflect.ownKeys(given).filter((v, k) => !changes.D.has(k)),
+                ...Reflect.ownKeys(target)
             ])) ];
             return keys;
         },
 
-        has (target, key) {
-            return patch.A.has(key) || (!patch.D.has(key) && Reflect.has(target, key)); 
+        has (target, prop) {
+            return changes.A.has(prop) || (!changes.D.has(prop) && Reflect.has(target, prop)); 
         },
 
-        set (target, key, value, receiver) {
+        set (target, prop, value, receiver) {
             // TODO: handle `length` change
-            updatePatch(key, value, isArray);
-            return true;
+            return updateOverlay('A', prop, value);
         }
 
     }
 
-    return new Proxy(mediated, handler);
+    return new Proxy(overlay, handler);
 }
 
 mediary.Sym = Sym;
-mediary.SymPatch = SymPatch;
-mediary.SymPatches = SymPatches;
+mediary.SymChanges = SymChanges;
+mediary.SymChangelog = SymChangelog;
