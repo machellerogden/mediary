@@ -33,14 +33,10 @@ test('deep', t => {
     t.is(foo.a.e, 'f');
     t.is(bar.a.e, 'z');
     t.deepEqual(bar.a.b[0][SymChangelog][0], {
-        A: 'c',
-        value: 'z',
-        inArray: false
+        A: 'c'
     });
     t.deepEqual(bar.a[SymChangelog][0], {
-        A: 'e',
-        value: 'z',
-        inArray: false
+        A: 'e'
     });
 });
 
@@ -56,9 +52,7 @@ test('push 1', t => {
     t.deepEqual(foo.c, [ 'c' ]);
     t.deepEqual(bar.c, [ 'c', 'd' ]);
     t.deepEqual(bar.c[SymChangelog][0], {
-        A: '1',
-        value: 'd',
-        inArray: true
+        A: '1'
     });
 });
 
@@ -79,9 +73,7 @@ test('push 2', t => {
     t.deepEqual(foo.a.b, [ { c: 'd' } ]);
     t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
     t.deepEqual(bar.a.b[SymChangelog][0], {
-        A: '1',
-        value: 'new value',
-        inArray: true
+        A: '1'
     });
 });
 
@@ -111,13 +103,7 @@ test('spread 1', t => {
     t.deepEqual(bar.a, { b: 'b', c: 'c', d: 'd' });
     t.deepEqual(foo, { a: { b: 'b', c: 'c' } });
     t.deepEqual(bar[SymChangelog][0], {
-        A: 'a',
-        value: {
-            b: 'b',
-            c: 'c',
-            d: 'd'
-        },
-        inArray: false
+        A: 'a'
     });
 });
 
@@ -136,12 +122,7 @@ test('spread 2', t => {
     t.deepEqual(bar.a.c, { d: 'd', e: 'e' });
     t.deepEqual(foo, { a: { b: 'b', c: { d: 'd' } } });
     t.deepEqual(bar.a[SymChangelog][0], {
-        A: 'c',
-        value: { 
-            d: 'd',
-            e: 'e'
-        },
-        inArray: false
+        A: 'c'
     });
 });
 
@@ -160,9 +141,7 @@ test('spread 3', t => {
     t.deepEqual(bar.a.c, [ 'd', 'e' ]);
     t.deepEqual(foo, { a: { b: 'b', c: [ 'd' ] } });
     t.deepEqual(bar.a[SymChangelog][0], {
-        A: 'c',
-        value: [ 'd', 'e' ],
-        inArray: false
+        A: 'c'
     });
 });
 
@@ -188,12 +167,7 @@ test('spread 4', t => {
     ]);
 
     t.deepEqual(bar.c[SymChangelog][0], {
-        A: '0',
-        value: {
-            another: 'entry',
-            d: 'd'
-        },
-        inArray: true
+        A: '0'
     });
 });
 
@@ -207,9 +181,7 @@ test('set an array', t => {
     bar.c = [ 'c', 'd' ];
     t.deepEqual(bar.c, [ 'c', 'd' ]);
     t.deepEqual(bar[SymChangelog][0], {
-        A: 'c',
-        value: [ 'c', 'd' ],
-        inArray: false
+        A: 'c'
     });
 });
 
@@ -225,9 +197,7 @@ test('base array', t => {
     t.deepEqual(bar[1], 'b');
     t.deepEqual(bar.length, 2);
     t.deepEqual(bar[SymChangelog][0], {
-        A: '1',
-        value: 'b',
-        inArray: true
+        A: '1'
     });
 });
 
@@ -241,8 +211,6 @@ test('base array 2', t => {
     bar.push('b');
     t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
     t.deepEqual(bar[SymChangelog][0], {
-        A: '1',
-        value: 'b',
-        inArray: true
+        A: '1'
     });
 });

@@ -39,7 +39,11 @@ function mediary(given) {
         || given[Sym])
         return given;
 
-    const overlay = Object.create(given);
+    const overlay = Array.isArray(given)
+        ? []
+        : {};
+
+    Reflect.setPrototypeOf(overlay, given);
 
     const changelog = [];
 
@@ -85,17 +89,20 @@ function mediary(given) {
             if (prop === SymChanges) return changes;
             if (prop === SymChangelog) return changelog;
             if (prop === SymTarget) return given;
-            // TODO: handle length
-            // if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
+            if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
 
             if (changes.D.has(prop)) return void 0;
-            if (Reflect.has(given, prop)) target[prop] = mediary(given[prop]);
+            if (Reflect.ownKeys(given).includes(prop) || Reflect.ownKeys(target).includes(prop)) {
+                target[prop] = mediary(target[prop]);
+            }
             return target[prop];
         },
 
         getOwnPropertyDescriptor (target, prop) {
             if (changes.D.has(prop)) return void 0;
-            if (Reflect.has(given, prop)) target[prop] = mediary(given[prop]);
+            if (Reflect.ownKeys(given).includes(prop) || Reflect.ownKeys(target).includes(prop)) {
+                target[prop] = mediary(target[prop]);
+            }
             return Reflect.getOwnPropertyDescriptor(target, prop);
         },
 
@@ -118,7 +125,7 @@ function mediary(given) {
         },
 
         has (target, prop) {
-            return changes.A.has(prop) || (!changes.D.has(prop) && Reflect.has(target, prop)); 
+            return changes.A.has(prop) || (!changes.D.has(prop) && Reflect.has(target, prop));
         },
 
         set (target, prop, value, receiver) {
