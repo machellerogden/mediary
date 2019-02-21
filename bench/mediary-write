@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+const mediary = require('..');
+const runner = require('./runner');
+const data = require('./data');
+
+const leak = [];
+
+runner('mediary', 100, x => {
+    leak.push(mediary(data));
+});

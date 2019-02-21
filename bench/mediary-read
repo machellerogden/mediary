@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
+const mediary = require('..');
 const runner = require('./runner');
 const data = require('./data');
-const cloned = JSON.parse(JSON.stringify(data));
+const cloned = mediary(data);
 
-runner('stringify', 5, x => {
-    cloned.data.map(v => {
+
+runner('mediary', 100, x => {
+    cloned.data.forEach(v => {
         v._id;
         v.index;
         v.guid;

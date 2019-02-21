@@ -16,7 +16,7 @@ const SymTarget = Symbol('mediary.target');
 const SymChanges = Symbol('mediary.changes');
 const SymChangelog = Symbol('mediary.changelog');
 
-const PropChange = (op, k) => ({ [op]: k });
+const PropChange = (op, prop) => ({ [op]: prop });
 
 const realizeChanges = changelog => changelog.reduce((P, { A, D }) => {
     if (A) {
@@ -39,7 +39,9 @@ function mediary(given) {
         || given[Sym])
         return given;
 
-    const overlay = Array.isArray(given)
+    const isArray = Array.isArray(given);
+
+    const overlay = isArray
         ? []
         : {};
 
@@ -61,7 +63,6 @@ function mediary(given) {
         return true;
     };
 
-    const isArray = Array.isArray(given);
 
     const handler = {
 
