@@ -45,12 +45,28 @@ function mediary(given) {
 
     const overlay = new Proxy(isArray ? [] : {}, {
         get (target, prop) {
-            return (typeof target[prop] !== 'undefined')
+            return Reflect.has(target, prop)
                 ? target[prop]
                 : givenKeys.includes(prop)
                     ? given[prop]
                     : void 0;
         }
+        // TODO: handle length change
+        //,
+        //set (target, prop, value) {
+            //if (prop === 'length' && isArray) {
+                //if (typeof value !== 'number') throw new TypeError('length must be a number');
+                //const length = Reflect.has(target, prop)
+                    //? target.length
+                    //: given.length;
+                //console.log('***');
+                //console.log(length);
+                //console.log('***');
+                //for (let i = value; i < length; i++) delete target[i]; // delegates to `deleteProperty` trap
+                //for (let i = value; i > length; i--) target.push(void 0); // recursion! triggers `set` trap again as well as `get` and `ownKeys`
+            //}
+            //return Reflect.set(target, prop, value);
+        //}
     });
 
     const changelog = [];
@@ -137,12 +153,6 @@ function mediary(given) {
 
         set (target, prop, value, receiver) {
             // TODO: handle `length` change
-            //if (prop === 'length' && Array.isArray(receiver)) { // reflect on proxy instance
-                //if (typeof value !== 'number') throw new TypeError('length must be a number');
-                //const length = receiver.length; // reflect via `get` trap
-                //for (let i = value; i < length; i++) delete receiver[i]; // delegates to `deleteProperty` trap
-                //for (let i = value; i > length; i--) receiver.push(void 0); // recursion! triggers `set` trap again as well as `get` and `ownKeys`
-            //}
             return updateOverlay('A', prop, value);
         }
 
