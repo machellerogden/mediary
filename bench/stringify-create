@@ -6,6 +6,6 @@ const cloned = JSON.parse(JSON.stringify(data));
 
 const leak = [];
 
-runner('stringify', 100, x => {
+runner('stringify-create', 1000, x => {
     leak.push(JSON.parse(JSON.stringify(data)));
 });

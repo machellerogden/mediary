@@ -4,11 +4,10 @@ module.exports = mediary;
 
 const {
     debug,
-    isPrimitive,
-    isPlainObject,
     reduce,
     toArray,
-    getNumericKeys
+    getNumericKeys,
+    deepFreeze
 } = require('./util');
 
 const Sym = Symbol('mediary');
@@ -35,17 +34,24 @@ const realizeChanges = changelog => changelog.reduce((P, { A, D }) => {
 
 function mediary(given) {
     if (given == null
-        || !isPlainObject(given)
+        || typeof given !== 'object'
         || given[Sym])
         return given;
 
     const isArray = Array.isArray(given);
+    const givenKeys = Object.keys(given);
 
-    const overlay = isArray
-        ? []
-        : {};
+    deepFreeze(given);
 
-    Reflect.setPrototypeOf(overlay, given);
+    const overlay = new Proxy(isArray ? [] : {}, {
+        get (target, prop) {
+            return (typeof target[prop] !== 'undefined')
+                ? target[prop]
+                : givenKeys.includes(prop)
+                    ? given[prop]
+                    : void 0;
+        }
+    });
 
     const changelog = [];
 
@@ -93,15 +99,15 @@ function mediary(given) {
             if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
 
             if (changes.D.has(prop)) return void 0;
-            if (Reflect.ownKeys(given).includes(prop) || Reflect.ownKeys(target).includes(prop)) {
+            if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
                 target[prop] = mediary(target[prop]);
             }
             return target[prop];
         },
 
         getOwnPropertyDescriptor (target, prop) {
-            if (changes.D.has(prop)) return void 0;
-            if (Reflect.ownKeys(given).includes(prop) || Reflect.ownKeys(target).includes(prop)) {
+            if (changes.D.has(prop) || [ Sym, SymChanges, SymChangelog, SymTarget ].includes(prop)) return void 0;
+            if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
                 target[prop] = mediary(target[prop]);
             }
             return Reflect.getOwnPropertyDescriptor(target, prop);
@@ -109,7 +115,7 @@ function mediary(given) {
 
         getPrototypeOf (target) {
             // TODO
-            return Reflect.getPrototypeOf(given);
+            return Reflect.getPrototypeOf(target);
         },
 
         setPrototypeOf (target, prototype) {
@@ -131,6 +137,12 @@ function mediary(given) {
 
         set (target, prop, value, receiver) {
             // TODO: handle `length` change
+            //if (prop === 'length' && Array.isArray(receiver)) { // reflect on proxy instance
+                //if (typeof value !== 'number') throw new TypeError('length must be a number');
+                //const length = receiver.length; // reflect via `get` trap
+                //for (let i = value; i < length; i++) delete receiver[i]; // delegates to `deleteProperty` trap
+                //for (let i = value; i > length; i--) receiver.push(void 0); // recursion! triggers `set` trap again as well as `get` and `ownKeys`
+            //}
             return updateOverlay('A', prop, value);
         }
 
