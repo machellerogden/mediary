@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const mediary = require('..');
+const { mediary } = require('..');
 const runner = require('./runner');
 const data = require('./data');
 

@@ -1,7 +1,5 @@
 'use strict';
 
-module.exports = mediary;
-
 const {
     debug,
     reduce,
@@ -33,7 +31,8 @@ function mediary(given) {
         given,
         ownKeys,
         deletions,
-        patch
+        patch,
+        isArray
     };
 
     const overlay = new Proxy(patch, {
@@ -133,5 +132,26 @@ function mediary(given) {
     return new Proxy(overlay, handler);
 }
 
-mediary.Sym = Sym;
-mediary.SymMeta = SymMeta;
+function realize(given) {
+    if (given != 'object'
+        || !given[Sym]) return given;
+    const {
+        target,
+        patch,
+        ownKeys,
+        isArray
+    } = given[SymMeta];
+    return [ ...ownKeys ].reduce((acc, k) => {
+        acc[k] = realize(Reflect.has(patch, k)
+            ? patch[k]
+            : target[k]);
+    }, isArray ? [] : {});
+}
+
+const clone = given => mediary(realize(given));
+
+exports.realize = realize;
+exports.mediary = mediary;
+exports.clone = clone;
+exports.Sym = Sym;
+exports.SymMeta = SymMeta;

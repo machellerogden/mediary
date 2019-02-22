@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import mediary, { Sym, SymMeta } from '.';
+import { mediary, clone, Sym, SymMeta } from '.';
 
 test('shallow', t => {
     const foo = {
