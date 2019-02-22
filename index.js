@@ -11,21 +11,32 @@ const {
 } = require('./util');
 
 const Sym = Symbol('mediary');
-const SymTarget = Symbol('mediary.target');
-const SymChanges = Symbol('mediary.changes');
+const SymMeta = Symbol('mediary.meta');
 
 function mediary(given) {
     if (given == null
         || typeof given !== 'object'
-        || given[Sym])
+        || given[Sym]
+        || !(Object.is(given.constructor, Object) || Object.is(given.constructor, Array)))
         return given;
-
-    const isArray = Array.isArray(given);
-    const givenKeys = Object.keys(given);
 
     deepFreeze(given);
 
-    const overlay = new Proxy(isArray ? [] : {}, {
+    const isArray = Array.isArray(given);
+    const givenKeys = Reflect.ownKeys(given);
+
+    const patch = isArray ? [] : {};
+    const ownKeys = new Set(givenKeys);
+    const deletions = new Set();
+
+    const meta = {
+        given,
+        ownKeys,
+        deletions,
+        patch
+    };
+
+    const overlay = new Proxy(patch, {
         get (target, prop) {
             return Reflect.has(target, prop)
                 ? target[prop]
@@ -51,32 +62,17 @@ function mediary(given) {
         //}
     });
 
-    let changes = {
-        A: new Set(givenKeys),
-        D: new Set()
-    };
-
-    const updateOverlay = (op, prop, value) => {
-        if (op === 'D') {
-            changes.D.add(prop);
-            delete overlay[prop];
-        } else {
-            changes.A.add(prop);
-            overlay[prop] = value;
-        }
-        return true;
-    };
-
 
     const handler = {
 
         defineProperty(target, prop, attr) {
-            // TODO
+            // TODO - need to add set logic here
             return Reflect.defineProperty(target, prop, attr);
         },
 
         deleteProperty(target, prop) {
-            return updateOverlay('D', prop);
+            deletions.add(prop);
+            return Reflect.deleteProperty(patch, prop);
         },
 
         isExtensible(target) {
@@ -91,11 +87,10 @@ function mediary(given) {
 
         get (target, prop, receiver) {
             if (prop === Sym) return true;
-            if (prop === SymChanges) return changes;
-            if (prop === SymTarget) return given;
+            if (prop === SymMeta) return meta;
             if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
 
-            if (changes.D.has(prop)) return void 0;
+            if (deletions.has(prop)) return void 0;
             if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
                 target[prop] = mediary(target[prop]);
             }
@@ -103,7 +98,7 @@ function mediary(given) {
         },
 
         getOwnPropertyDescriptor (target, prop) {
-            if (changes.D.has(prop) || [ Sym, SymChanges, SymTarget ].includes(prop)) return void 0;
+            if (deletions.has(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
             if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
                 target[prop] = mediary(target[prop]);
             }
@@ -121,20 +116,16 @@ function mediary(given) {
         },
 
         ownKeys (target) {
-            const keys = [ ...(new Set([
-                ...Reflect.ownKeys(given).filter((v, k) => !changes.D.has(k)),
-                ...Reflect.ownKeys(target)
-            ])) ];
-            return keys;
+            return [ ...ownKeys ];
         },
 
         has (target, prop) {
-            return changes.A.has(prop) || (!changes.D.has(prop) && Reflect.has(target, prop));
+            return ownKeys.has(prop) || (!deletions.has(prop) && Reflect.has(target, prop));
         },
 
         set (target, prop, value, receiver) {
-            // TODO: handle `length` change
-            return updateOverlay('A', prop, value);
+            ownKeys.add(prop);
+            return Reflect.set(patch, prop, value);
         }
 
     }
@@ -143,4 +134,4 @@ function mediary(given) {
 }
 
 mediary.Sym = Sym;
-mediary.SymChanges = SymChanges;
+mediary.SymMeta = SymMeta;
