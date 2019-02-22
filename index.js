@@ -24,7 +24,7 @@ function mediary(given) {
     const givenKeys = Reflect.ownKeys(given);
 
     const patch = isArray ? [] : {};
-    const ownKeys = new Set(givenKeys);
+    const ownKeys = new Set(givenKeys); // this killed performance
     const deletions = new Set();
 
     const meta = {
