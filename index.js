@@ -24,15 +24,17 @@ function mediary(given) {
     const givenKeys = Reflect.ownKeys(given);
 
     const patch = isArray ? [] : {};
-    const ownKeys = new Set(givenKeys); // this killed performance
+    const additions = new Set();
     const deletions = new Set();
+    const ownKeys = () => [ ...additions, ...givenKeys.filter((_, k) => !deletions.has(k)) ];
 
     const meta = {
         given,
-        ownKeys,
+        additions,
         deletions,
         patch,
-        isArray
+        isArray,
+        ownKeys
     };
 
     const overlay = new Proxy(patch, {
@@ -42,20 +44,27 @@ function mediary(given) {
                 : givenKeys.includes(prop)
                     ? given[prop]
                     : void 0;
-        }
-        // TODO: handle length change
-        //,
-        //set (target, prop, value) {
+        }//,
+        //set (target, prop, value, receiver) {
             //if (prop === 'length' && isArray) {
-                //if (typeof value !== 'number') throw new TypeError('length must be a number');
                 //const length = Reflect.has(target, prop)
-                    //? target.length
-                    //: given.length;
-                //console.log('***');
-                //console.log(length);
-                //console.log('***');
-                //for (let i = value; i < length; i++) delete target[i]; // delegates to `deleteProperty` trap
-                //for (let i = value; i > length; i--) target.push(void 0); // recursion! triggers `set` trap again as well as `get` and `ownKeys`
+                    //? target[prop]
+                    //: givenKeys.includes(prop)
+                        //? given[prop]
+                        //: 0;
+                //if (value < length) {
+                    //for (let i = 0; i < value; i++) {
+                        //deletions.add(i);
+                        //target.pop();
+                    //}
+                //} else if (value > length) {
+                    //console.log('length set push - value', value);
+                    //console.log('length set push - length', length);
+                    //for (let i = target[prop]; i < value; i++) {
+                        //additions.add(i);
+                        //target.push(void 0);
+                    //}
+                //}
             //}
             //return Reflect.set(target, prop, value);
         //}
@@ -115,15 +124,15 @@ function mediary(given) {
         },
 
         ownKeys (target) {
-            return [ ...ownKeys ];
+            return ownKeys();
         },
 
         has (target, prop) {
-            return ownKeys.has(prop) || (!deletions.has(prop) && Reflect.has(target, prop));
+            return additions.has(prop) || (!deletions.has(prop) && Reflect.has(target, prop));
         },
 
         set (target, prop, value, receiver) {
-            ownKeys.add(prop);
+            additions.add(prop);
             return Reflect.set(patch, prop, value);
         }
 
@@ -141,7 +150,7 @@ function realize(given) {
         ownKeys,
         isArray
     } = given[SymMeta];
-    return [ ...ownKeys ].reduce((acc, k) => {
+    return ownKeys().reduce((acc, k) => {
         acc[k] = realize(Reflect.has(patch, k)
             ? patch[k]
             : target[k]);
