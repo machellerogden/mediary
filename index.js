@@ -26,10 +26,13 @@ function mediary(given) {
     const patch = isArray ? [] : {};
     const additions = new Set();
     const deletions = new Set();
-    const ownKeys = () => [ ...additions, ...givenKeys.filter((_, k) => !deletions.has(k)) ];
+    const ownKeys = () => new Set([
+        ...additions,
+        ...givenKeys.filter((_, k) => !deletions.has(k))
+    ]);
 
     const meta = {
-        given,
+        target: given,
         additions,
         deletions,
         patch,
@@ -44,32 +47,8 @@ function mediary(given) {
                 : givenKeys.includes(prop)
                     ? given[prop]
                     : void 0;
-        }//,
-        //set (target, prop, value, receiver) {
-            //if (prop === 'length' && isArray) {
-                //const length = Reflect.has(target, prop)
-                    //? target[prop]
-                    //: givenKeys.includes(prop)
-                        //? given[prop]
-                        //: 0;
-                //if (value < length) {
-                    //for (let i = 0; i < value; i++) {
-                        //deletions.add(i);
-                        //target.pop();
-                    //}
-                //} else if (value > length) {
-                    //console.log('length set push - value', value);
-                    //console.log('length set push - length', length);
-                    //for (let i = target[prop]; i < value; i++) {
-                        //additions.add(i);
-                        //target.push(void 0);
-                    //}
-                //}
-            //}
-            //return Reflect.set(target, prop, value);
-        //}
+        }
     });
-
 
     const handler = {
 
@@ -96,7 +75,8 @@ function mediary(given) {
         get (target, prop, receiver) {
             if (prop === Sym) return true;
             if (prop === SymMeta) return meta;
-            if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
+
+            // if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
 
             if (deletions.has(prop)) return void 0;
             if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
@@ -124,7 +104,7 @@ function mediary(given) {
         },
 
         ownKeys (target) {
-            return ownKeys();
+            return [ ...ownKeys() ];
         },
 
         has (target, prop) {
@@ -142,7 +122,7 @@ function mediary(given) {
 }
 
 function realize(given) {
-    if (given != 'object'
+    if (typeof given !== 'object'
         || !given[Sym]) return given;
     const {
         target,
@@ -150,10 +130,11 @@ function realize(given) {
         ownKeys,
         isArray
     } = given[SymMeta];
-    return ownKeys().reduce((acc, k) => {
-        acc[k] = realize(Reflect.has(patch, k)
+    return [ ...ownKeys() ].reduce((acc, k) => {
+        acc[k] = Reflect.has(patch, k)
             ? patch[k]
-            : target[k]);
+            : target[k];
+        return acc;
     }, isArray ? [] : {});
 }
 

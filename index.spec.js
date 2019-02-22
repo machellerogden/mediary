@@ -70,7 +70,7 @@ test('push 2', t => {
 });
 
 // TODO
-test.only('change length', t => {
+test.skip('change length', t => {
     const foo = {
         a: {
             b: [ 1, 2, 3 ]
