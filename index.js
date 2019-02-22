@@ -13,24 +13,6 @@ const {
 const Sym = Symbol('mediary');
 const SymTarget = Symbol('mediary.target');
 const SymChanges = Symbol('mediary.changes');
-const SymChangelog = Symbol('mediary.changelog');
-
-const PropChange = (op, prop) => ({ [op]: prop });
-
-const realizeChanges = changelog => changelog.reduce((P, { A, D }) => {
-    if (A) {
-        P.D.delete(A);
-        P.A.add(A);
-    } else if (D) {
-        P.A.delete(D);
-        P.D.add(A);
-    }
-    return P;
-}, {
-    A: new Set(),
-    D: new Set()
-});
-
 
 function mediary(given) {
     if (given == null
@@ -69,19 +51,19 @@ function mediary(given) {
         //}
     });
 
-    const changelog = [];
-
-    let changes = realizeChanges(changelog);
+    let changes = {
+        A: new Set(givenKeys),
+        D: new Set()
+    };
 
     const updateOverlay = (op, prop, value) => {
-        const change = PropChange(op, prop);
         if (op === 'D') {
+            changes.D.add(prop);
             delete overlay[prop];
         } else {
+            changes.A.add(prop);
             overlay[prop] = value;
         }
-        changelog.push(change);
-        changes = realizeChanges(changelog);
         return true;
     };
 
@@ -110,7 +92,6 @@ function mediary(given) {
         get (target, prop, receiver) {
             if (prop === Sym) return true;
             if (prop === SymChanges) return changes;
-            if (prop === SymChangelog) return changelog;
             if (prop === SymTarget) return given;
             if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
 
@@ -122,7 +103,7 @@ function mediary(given) {
         },
 
         getOwnPropertyDescriptor (target, prop) {
-            if (changes.D.has(prop) || [ Sym, SymChanges, SymChangelog, SymTarget ].includes(prop)) return void 0;
+            if (changes.D.has(prop) || [ Sym, SymChanges, SymTarget ].includes(prop)) return void 0;
             if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
                 target[prop] = mediary(target[prop]);
             }
@@ -163,4 +144,3 @@ function mediary(given) {
 
 mediary.Sym = Sym;
 mediary.SymChanges = SymChanges;
-mediary.SymChangelog = SymChangelog;
