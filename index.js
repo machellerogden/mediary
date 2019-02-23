@@ -4,7 +4,7 @@ const {
     debug,
     reduce,
     toArray,
-    getNumericKeys,
+    getNumeric,
     deepFreeze
 } = require('./util');
 
@@ -41,34 +41,45 @@ function mediary(given) {
     };
 
     const overlay = new Proxy(patch, {
-        get (target, prop) {
+        get (target, prop, receiver) {
             return Reflect.has(target, prop)
-                ? target[prop]
-                : givenKeys.includes(prop)
-                    ? given[prop]
-                    : void 0;
+                ? Reflect.get(target, prop)
+                : Reflect.get(given, prop);
+        },
+        set (target, prop, value, receiver) {
+            if (prop === 'length' && isArray) {
+                // not this ... WIP
+                givenKeys.forEach(key => {
+                    console.log('key', key);
+                    console.log('typeof key', typeof key);
+                    if (!deletions.has(key)) {
+                        additions.add(key);
+                        Reflect.set(target, key, value, receiver);
+                    }
+                });
+            } else {
+                return Reflect.set(target, prop, value, receiver);
+            }
         }
     });
 
     const handler = {
 
         defineProperty(target, prop, attr) {
-            // TODO - need to add set logic here
+            additions.add(prop);
             return Reflect.defineProperty(target, prop, attr);
         },
 
         deleteProperty(target, prop) {
             deletions.add(prop);
-            return Reflect.deleteProperty(patch, prop);
+            return Reflect.deleteProperty(target, prop);
         },
 
         isExtensible(target) {
-            // TODO
             return Reflect.isExtensible(target);
         },
 
         preventExtensions(target) {
-            // TODO
             return Reflect.preventExtensions(target);
         },
 
@@ -76,13 +87,15 @@ function mediary(given) {
             if (prop === Sym) return true;
             if (prop === SymMeta) return meta;
 
-            // if (prop === 'length' && Array.isArray(receiver)) return Math.max.apply(null, getNumericKeys(receiver)) + 1;
+            if (prop === 'length' && isArray) return Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
 
             if (deletions.has(prop)) return void 0;
+
             if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
                 target[prop] = mediary(target[prop]);
             }
-            return target[prop];
+
+            return Reflect.get(target, prop);
         },
 
         getOwnPropertyDescriptor (target, prop) {
@@ -94,12 +107,10 @@ function mediary(given) {
         },
 
         getPrototypeOf (target) {
-            // TODO
             return Reflect.getPrototypeOf(target);
         },
 
         setPrototypeOf (target, prototype) {
-            // TODO
             return Reflect.getPrototypeOf(target, prototype);
         },
 
@@ -108,14 +119,13 @@ function mediary(given) {
         },
 
         has (target, prop) {
-            return additions.has(prop) || (!deletions.has(prop) && Reflect.has(target, prop));
+            return !deletions.has(prop) && (Reflect.has(target, prop) || Reflect.has(given, prop));
         },
 
         set (target, prop, value, receiver) {
             additions.add(prop);
-            return Reflect.set(patch, prop, value);
+            return Reflect.set(target, prop, value);
         }
-
     }
 
     return new Proxy(overlay, handler);

@@ -25,7 +25,7 @@ exports.toArray = o => Object.entries(o).reduce((acc, [ k, v ]) => (acc[k] = v, 
 
 exports.isNumber = n => !isNaN(parseInt(n, 10)) && isFinite(n);
 
-exports.getNumericKeys = v => Object.getOwnPropertyNames(v).filter(exports.isNumber).map(Number);
+exports.getNumeric = keys => keys.filter(exports.isNumber).map(Number);
 
 exports.deepFreeze = o => {
     Object.freeze(o);
