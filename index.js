@@ -45,33 +45,18 @@ function mediary(given) {
             return Reflect.has(target, prop)
                 ? Reflect.get(target, prop)
                 : Reflect.get(given, prop);
-        },
-        set (target, prop, value, receiver) {
-            if (prop === 'length' && isArray) {
-                // not this ... WIP
-                givenKeys.forEach(key => {
-                    console.log('key', key);
-                    console.log('typeof key', typeof key);
-                    if (!deletions.has(key)) {
-                        additions.add(key);
-                        Reflect.set(target, key, value, receiver);
-                    }
-                });
-            } else {
-                return Reflect.set(target, prop, value, receiver);
-            }
         }
     });
 
     const handler = {
 
         defineProperty(target, prop, attr) {
-            additions.add(prop);
+            additions.add(String(prop));
             return Reflect.defineProperty(target, prop, attr);
         },
 
         deleteProperty(target, prop) {
-            deletions.add(prop);
+            deletions.add(String(prop));
             return Reflect.deleteProperty(target, prop);
         },
 
@@ -87,9 +72,12 @@ function mediary(given) {
             if (prop === Sym) return true;
             if (prop === SymMeta) return meta;
 
-            if (prop === 'length' && isArray) return Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
-
             if (deletions.has(prop)) return void 0;
+
+            if (prop === 'length' && isArray) {
+                return Math.max.apply(null, getNumeric([ ...ownKeys() ].filter(k => !deletions.has(k)))) + 1;
+            }
+
 
             if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
                 target[prop] = mediary(target[prop]);
@@ -123,8 +111,24 @@ function mediary(given) {
         },
 
         set (target, prop, value, receiver) {
-            additions.add(prop);
-            return Reflect.set(target, prop, value);
+            additions.add(String(prop));
+            if (prop === 'length' && isArray) {
+                const length = Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
+                const v = parseInt(value, 10);
+                let i = v;
+                while (length > i) {
+                    deletions.add(String(i));
+                    delete target[i];
+                    i++;
+                }
+                i = length;
+                while (v > i) {
+                    additions.add(String(i));
+                    target[i] = void 0;
+                    i++;
+                }
+            }
+            return Reflect.set(target, prop, value, receiver);
         }
     }
 
