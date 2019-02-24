@@ -22,7 +22,6 @@ function mediary(given) {
 
     const isArray = Array.isArray(given);
     const givenKeys = Reflect.ownKeys(given);
-
     const patch = isArray ? [] : {};
     const additions = new Set();
     const deletions = new Set();
@@ -30,6 +29,7 @@ function mediary(given) {
         ...additions,
         ...givenKeys.filter((_, k) => !deletions.has(k))
     ]);
+    const virtualLength = () => Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
 
     const changes = {
         add (p) {
@@ -60,7 +60,7 @@ function mediary(given) {
         ownKeys
     };
 
-    const overlay = new Proxy(patch, {
+    return new Proxy(patch, {
 
         defineProperty(target, prop, attr) {
             changes.add(prop);
@@ -75,20 +75,32 @@ function mediary(given) {
         getOwnPropertyDescriptor (target, prop) {
             if (changes.deleted(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
 
+            const value = Reflect.ownKeys(isArray ? [ ...target ] : { ...target }, prop)
+                ? Reflect.get(target, prop)
+                : Reflect.get(given, prop);
+
             if (!changes.touched(prop) && givenKeys.includes(prop)) {
                 changes.add(prop);
                 target[prop] = mediary(given[prop]);
             }
 
-            return changes.added(prop)
-                ? Reflect.getOwnPropertyDescriptor(target, prop)
-                : givenKeys.includes(prop)
-                    ? {
-                        ...Reflect.getOwnPropertyDescriptor(given, prop),
-                        writable: true,
-                        configurable: isArray || prop !== 'length'
-                      }
-                    : void 0;
+            if (isArray && prop === 'length') {
+                const length = virtualLength();
+                return {
+                    writable: true,
+                    configurable: false,
+                    enumerable: false,
+                    value: length
+                };
+            }
+            if (changes.added(prop) || givenKeys.includes(prop)) {
+                return {
+                    writable: true,
+                    configurable: true,
+                    enumerable: true,
+                    value
+                };
+            }
         },
 
         get (target, prop, receiver) {
@@ -98,7 +110,7 @@ function mediary(given) {
             if (changes.deleted(prop)) return void 0;
 
             if (prop === 'length' && isArray) {
-                return Math.max.apply(null, getNumeric([ ...ownKeys() ].filter(k => !changes.deleted(k)))) + 1;
+                return virtualLength();
             }
 
             if (!changes.touched(prop) && givenKeys.includes(prop)) {
@@ -106,10 +118,27 @@ function mediary(given) {
                 target[prop] = mediary(given[prop]);
             }
 
-            return additions.has(String(prop))
+            return changes.added(prop) && Reflect.ownKeys(target, prop)
                 ? Reflect.get(target, prop)
                 : Reflect.get(given, prop);
         },
+
+        getPrototypeOf (target) {
+            return Reflect.getPrototypeOf(target);
+        },
+
+        setPrototypeOf (target, prototype) {
+            return Reflect.getPrototypeOf(target, prototype);
+        },
+
+        ownKeys (target) {
+            return [ ...ownKeys() ];
+        },
+
+        has (target, prop) { // TODO: can be deleted and still has'd via of prototype... need to fix
+            return !changes.deleted(prop) && (Reflect.has(target, prop) || Reflect.has(given, prop));
+        },
+
         set (target, prop, value, receiver) {
             if (prop === 'length' && isArray) {
                 const length = Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
@@ -132,54 +161,6 @@ function mediary(given) {
         }
     });
 
-    const handler = {
-
-        defineProperty(target, prop, attr) {
-            return Reflect.defineProperty(target, prop, attr);
-        },
-
-        deleteProperty(target, prop) {
-            return Reflect.deleteProperty(target, prop);
-        },
-
-        isExtensible(target) {
-            return Reflect.isExtensible(target);
-        },
-
-        preventExtensions(target) {
-            return Reflect.preventExtensions(target);
-        },
-
-        get (target, prop, receiver) {
-            return Reflect.get(target, prop);
-        },
-
-        getOwnPropertyDescriptor (target, prop) {
-            return Reflect.getOwnPropertyDescriptor(target, prop);
-        },
-
-        getPrototypeOf (target) {
-            return Reflect.getPrototypeOf(target);
-        },
-
-        setPrototypeOf (target, prototype) {
-            return Reflect.getPrototypeOf(target, prototype);
-        },
-
-        ownKeys (target) {
-            return [ ...ownKeys() ];
-        },
-
-        has (target, prop) { // TODO: can be deleted and still has'd via of prototype... need to fix
-            return !changes.deleted(prop) && (Reflect.has(target, prop) || Reflect.has(given, prop));
-        },
-
-        set (target, prop, value, receiver) {
-            return Reflect.set(target, prop, value, receiver);
-        }
-    }
-
-    return new Proxy(overlay, handler);
 }
 
 function realize(given) {
