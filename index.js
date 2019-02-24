@@ -75,7 +75,7 @@ function mediary(given) {
         getOwnPropertyDescriptor (target, prop) {
             if (changes.deleted(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
 
-            const value = Reflect.ownKeys(isArray ? [ ...target ] : { ...target }, prop)
+            const value = ownKeys().has(prop)
                 ? Reflect.get(target, prop)
                 : Reflect.get(given, prop);
 
@@ -118,9 +118,11 @@ function mediary(given) {
                 target[prop] = mediary(given[prop]);
             }
 
-            return changes.added(prop) && Reflect.ownKeys(target, prop)
+            const value = ownKeys().has(prop)
                 ? Reflect.get(target, prop)
                 : Reflect.get(given, prop);
+
+            return value;
         },
 
         getPrototypeOf (target) {
