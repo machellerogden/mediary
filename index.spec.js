@@ -80,8 +80,8 @@ test('change length', t => {
     bar.a.b.length = 1;
     t.deepEqual(foo.a.b, [ 1, 2, 3 ]);
     t.is(foo.a.b.length, 3);
-    //t.is(bar.a.b.length, 1);
-    //t.deepEqual(bar.a.b, [ 1 ]);
+    t.is(bar.a.b.length, 1);
+    t.deepEqual(bar.a.b, [ 1 ]);
 });
 
 test('spread 1', t => {

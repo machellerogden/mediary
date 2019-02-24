@@ -31,6 +31,26 @@ function mediary(given) {
         ...givenKeys.filter((_, k) => !deletions.has(k))
     ]);
 
+    const changes = {
+        add (p) {
+            additions.add(String(p)),
+            deletions.delete(String(p))
+        },
+        delete (p) {
+            deletions.add(String(p)),
+            additions.delete(String(p))
+        },
+        added (p) {
+            return additions.has(String(p));
+        },
+        deleted (p) {
+            return deletions.has(String(p));
+        },
+        touched (p) {
+            return additions.has(String(p)) || deletions.has(String(p));
+        }
+    };
+
     const meta = {
         target: given,
         additions,
@@ -41,22 +61,84 @@ function mediary(given) {
     };
 
     const overlay = new Proxy(patch, {
+
+        defineProperty(target, prop, attr) {
+            changes.add(prop);
+            return Reflect.defineProperty(target, prop, attr);
+        },
+
+        deleteProperty(target, prop) {
+            changes.delete(prop);
+            return Reflect.deleteProperty(target, prop);
+        },
+
+        getOwnPropertyDescriptor (target, prop) {
+            if (changes.deleted(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
+
+            if (!changes.touched(prop) && givenKeys.includes(prop)) {
+                changes.add(prop);
+                target[prop] = mediary(given[prop]);
+            }
+
+            return changes.added(prop)
+                ? Reflect.getOwnPropertyDescriptor(target, prop)
+                : givenKeys.includes(prop)
+                    ? {
+                        ...Reflect.getOwnPropertyDescriptor(given, prop),
+                        writable: true,
+                        configurable: isArray || prop !== 'length'
+                      }
+                    : void 0;
+        },
+
         get (target, prop, receiver) {
-            return Reflect.has(target, prop)
+            if (prop === Sym) return true;
+            if (prop === SymMeta) return meta;
+
+            if (changes.deleted(prop)) return void 0;
+
+            if (prop === 'length' && isArray) {
+                return Math.max.apply(null, getNumeric([ ...ownKeys() ].filter(k => !changes.deleted(k)))) + 1;
+            }
+
+            if (!changes.touched(prop) && givenKeys.includes(prop)) {
+                changes.add(prop);
+                target[prop] = mediary(given[prop]);
+            }
+
+            return additions.has(String(prop))
                 ? Reflect.get(target, prop)
                 : Reflect.get(given, prop);
+        },
+        set (target, prop, value, receiver) {
+            if (prop === 'length' && isArray) {
+                const length = Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
+                const v = parseInt(value, 10);
+                let i = v;
+                while (length > i) {
+                    changes.delete(i);
+                    Reflect.deleteProperty(target, i);
+                    i++;
+                }
+                i = length;
+                while (v > i) {
+                    changes.add(i);
+                    Reflect.set(target, i, void 0);
+                    i++;
+                }
+            }
+            changes.add(prop);
+            return Reflect.set(target, prop, value, receiver);
         }
     });
 
     const handler = {
 
         defineProperty(target, prop, attr) {
-            additions.add(String(prop));
             return Reflect.defineProperty(target, prop, attr);
         },
 
         deleteProperty(target, prop) {
-            deletions.add(String(prop));
             return Reflect.deleteProperty(target, prop);
         },
 
@@ -69,28 +151,10 @@ function mediary(given) {
         },
 
         get (target, prop, receiver) {
-            if (prop === Sym) return true;
-            if (prop === SymMeta) return meta;
-
-            if (deletions.has(prop)) return void 0;
-
-            if (prop === 'length' && isArray) {
-                return Math.max.apply(null, getNumeric([ ...ownKeys() ].filter(k => !deletions.has(k)))) + 1;
-            }
-
-
-            if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
-                target[prop] = mediary(target[prop]);
-            }
-
             return Reflect.get(target, prop);
         },
 
         getOwnPropertyDescriptor (target, prop) {
-            if (deletions.has(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
-            if (givenKeys.includes(prop) || Reflect.ownKeys(target).includes(prop)) {
-                target[prop] = mediary(target[prop]);
-            }
             return Reflect.getOwnPropertyDescriptor(target, prop);
         },
 
@@ -106,28 +170,11 @@ function mediary(given) {
             return [ ...ownKeys() ];
         },
 
-        has (target, prop) {
-            return !deletions.has(prop) && (Reflect.has(target, prop) || Reflect.has(given, prop));
+        has (target, prop) { // TODO: can be deleted and still has'd via of prototype... need to fix
+            return !changes.deleted(prop) && (Reflect.has(target, prop) || Reflect.has(given, prop));
         },
 
         set (target, prop, value, receiver) {
-            additions.add(String(prop));
-            if (prop === 'length' && isArray) {
-                const length = Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
-                const v = parseInt(value, 10);
-                let i = v;
-                while (length > i) {
-                    deletions.add(String(i));
-                    delete target[i];
-                    i++;
-                }
-                i = length;
-                while (v > i) {
-                    additions.add(String(i));
-                    target[i] = void 0;
-                    i++;
-                }
-            }
             return Reflect.set(target, prop, value, receiver);
         }
     }
