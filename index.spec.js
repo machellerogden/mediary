@@ -225,3 +225,21 @@ test('delete', t => {
     t.true(bar[SymMeta].deletions.has('b'));
     t.deepEqual(bar[SymMeta].patch, { a: 'a' }); // TODO: 'a' is coming from original object ... need a test to prove it
 });
+
+test('splice', t => {
+    const foo = {
+        a: [ 'a', 'b', 'c' ]
+    };
+    const bar = clone(foo);
+    bar.a.splice(1);
+    t.deepEqual(foo, {
+        a: [ 'a', 'b', 'c' ]
+    });
+    t.deepEqual(bar, {
+        a: [ 'a' ]
+    });
+    t.deepEqual(bar[SymMeta].patch, { a: [ 'a' ] });
+    t.deepEqual(bar.a[SymMeta].patch, [ 'a' ]);
+    t.true(bar.a[SymMeta].deletions.has('1'));
+    t.true(bar.a[SymMeta].deletions.has('2'));
+});
