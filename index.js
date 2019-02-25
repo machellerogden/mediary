@@ -25,6 +25,8 @@ function mediary(given) {
     const patch = isArray ? [] : {};
     const additions = new Set();
     const deletions = new Set();
+
+    // TODO: ownKeys call is VERY expensive on large objects
     const ownKeys = () => new Set([
         ...additions,
         ...givenKeys.filter(k => !deletions.has(k))
@@ -84,9 +86,7 @@ function mediary(given) {
         },
 
         has (target, prop) {
-            return !changes.deleted(prop)
-                ? ownKeys().has(prop)
-                : Reflect.has(Reflect.getPrototypeOf(given), prop);
+            return !changes.deleted(prop) && (additions.has(prop) || Reflect.has(given));
         },
 
         getOwnPropertyDescriptor (target, prop) {
@@ -110,7 +110,7 @@ function mediary(given) {
                 };
             }
 
-            return ownKeys().has(prop)
+            return desc && !deletions.has(prop)
                 ? { ...desc, writable: true, configurable: true }
                 : void 0;
         },
