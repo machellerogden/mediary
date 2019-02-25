@@ -16,6 +16,7 @@ test('shallow', t => {
     t.is(bar.b, 'd');
     t.true(bar[SymMeta].additions.has('a'));
     t.true(bar[SymMeta].additions.has('b'));
+    t.deepEqual(bar[SymMeta].patch, { a: 'c', b: 'd' });
 });
 
 test('deep', t => {

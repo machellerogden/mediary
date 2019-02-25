@@ -153,7 +153,7 @@ function mediary(given) {
                 }
             }
             changes.add(prop);
-            return Reflect.set(target, prop, value, receiver);
+            return Reflect.set(target, prop, value);
         }
     });
 
