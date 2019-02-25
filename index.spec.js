@@ -11,7 +11,11 @@ test('shallow', t => {
     bar.a = 'c';
     bar.b = 'd';
     t.is(foo.a, 'b');
+    t.is(foo.b, void 0);
     t.is(bar.a, 'c');
+    t.is(bar.b, 'd');
+    t.true(bar[SymMeta].additions.has('a'));
+    t.true(bar[SymMeta].additions.has('b'));
 });
 
 test('deep', t => {
