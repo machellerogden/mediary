@@ -4,9 +4,9 @@
 
 Mediary implements structural sharing via proxies in order to provide a transparent virtualization for deep cloning with low memory usage and good performance characteristics.
 
-Use mediary's `clone` function to get an object representation which, for all intents and purposes, acts like a deeply cloned copy of your original data.
+Use Mediary's `clone` function to get an object representation which, for all intents and purposes, acts like a deeply cloned copy of your original data.
 
-Getting and setting values on this object works natively, as with any "normal" object.
+Getting and setting values on this object works natively. You're free to interact as you would with any normal object.
 
 ```js
 const { clone } = require('.');
@@ -39,7 +39,7 @@ console.log(bar.a[SymMeta].patch); // => { d: 'd' }
 
 In this case, an object with `d` was the only new value added to the patch. The rest of the object representation comes from the original object, `foo`.
 
-Warning! The original object will be deeply frozen upon cloning with mediary. This is to ensure immutability of the new "cloned" object.
+*Warning:* The original object will be deeply frozen upon cloning with Mediary. This is to ensure immutability of the new "cloned" object.
 
 ```
 foo.a = "z";
@@ -58,9 +58,7 @@ foo.a = "z"; // => TypeError: Cannot assign to read only property 'a' of object 
 
 # Differences from Immer
 
-First off: Immer is awesome. Use it. It's better tested and battle hardened. Mediary is still an experiment and should be used with caution.
-
-The main difference between the two is that mediary is exposes a more primitive layer than Immer, but essentially it works in the same way. In fact, mediary exports a `produce` function if you prefer to Immer's usage pattern.
+I read the Immer source after I finished writing the first draft of Mediary and I was surprise how similar the approach was. Both use Proxies and maintain an internal layer for patching change to objects. The main difference between Immer and Mediary is that Mediary exposes a more primitive layer than Immer. By exposing this layer, Mediary allows you to easily bake structural sharing into other libraries and projects. That said, if you prefer to Immer's usage pattern, Mediary exports a `produce` function.
 
 ```
 const { produce } = require('mediary');
