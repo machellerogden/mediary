@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const { mediary } = require('..');
+const { clone } = require('..');
 const runner = require('./runner');
 const data = require('./data');
 
 const leak = [];
 
 runner('mediary-create', 1000, x => {
-    leak.push(mediary(data));
+    leak.push(clone(data));
 });

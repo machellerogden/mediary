@@ -1,68 +1,27 @@
 # Mediary
 
-**WARNING!**
+> Deep clones, without the memory complexity.
 
-*This is an experiment. Please DO NOT USE this for anything real. Currently, the performance is terrible and it's buggy as all get out.*
-
-> An object immutability helper
-
+Mediary implements structural sharing via proxies. Use mediary's `clone` function to get an object representation which, for all intents and purposes, acts like a deeply cloned copy of your original data. Getting and setting values on this object works natively, as with any "normal" object. The only difference is that under the hood, any changes applied to the object are captured in a transparent patch layer instead of requiring a deep clone of the original data.
 
 ```js
-// require Mediary
-
-const Mediary = require('mediary');
+const { clone } = require('mediary');
 
 const foo = {
-    bar: {
-        baz: [ 'qux' ]
+    a: {
+        b: [ 'c' ]
     }
 };
 
-// Call any object once with Mediary.
-
-const mediatedFoo = Mediary(foo);
-
-// An immutable object representation will be returned. To demonstration this, let's assert the equality of our example objects.
+const bar = clone(foo);
 
 const assert = require('assert');
 
-assert.deepEqual(foo, mediatedFoo);
+assert.deepEqual(foo, bar);
 
-// We may now perform any native operation on this object without fear of mutating the original object.
+bar.a.b.push('d');
 
-mediatedFoo.bar.baz.push('boom');
+assert.deepEqual(foo, { a: { b: [ 'c' ] } });
 
-// Let's assert again to make sure we know what's happening...
-
-assert.deepEqual(foo, { bar: { baz: [ 'qux' ] } });
-assert.deepEqual(mediatedFoo, { bar: { baz: [ 'qux', 'boom' ] } });
-
-// The returned object is not a clone but rather it's a wrapper around the original object which mediates via patches which are applied via proxies and reflection.
-
-// In order to see this however, we need to inspect the internal patches with Mediary has applied. Mediary exports a `PatchSymbol` which can be used for this purpose.
-
-const { PatchSymbol } = Mediary;
-
-assert(mediatedFoo.bar.baz[PatchSymbol], [ void 0, 'boom' ]);
-
-// A sparse array is defined in this case, show that this was the only new object representation overlayed on the original data.
-
-// Mediary can even create efficient patches for changes which arrive via the native spread operator.
-
-mediatedFoo.bar = { ...mediatedFoo.bar, ...{ bam: 'boom' } };
-
-assert.deepEqual(foo, { bar: { baz: [ 'qux' ] } });
-assert.deepEqual(mediatedFoo.bar[PatchSymbol], { bam: 'boom' });
-
-// One caveat... there is a known bug which is proving difficult to track down.
-// Patched array representations become serialized with string keys in addition to their number indexes.
-
-try {
-    assert.deepEqual(mediatedFoo, { bar: { baz: [ 'qux', 'boom' ] }, bam: 'boom' });
-} catch (e) {
-    console.log(e.message);
-    // => { bar: { baz: [ 'qux', 'boom', '0': 'qux', '1': 'boom' ], bam: 'boom' } } deepEqual { bar: { baz: [ 'qux', 'boom' ] }, bam: 'boom' } 
-}
-
-// In practice, this has no negative effects, but is being worked on.
+assert.deepEqual(bar, { a: { b: [ 'c', 'd' ] } });
 ```

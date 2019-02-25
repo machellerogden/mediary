@@ -1,13 +1,13 @@
 'use strict';
 
 import test from 'ava';
-import { mediary, clone, Sym, SymMeta } from '.';
+import { clone, Sym, SymMeta } from '.';
 
 test('shallow', t => {
     const foo = {
         a: 'b'
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.a = 'c';
     bar.b = 'd';
     t.is(foo.a, 'b');
@@ -29,7 +29,7 @@ test('deep', t => {
             e: 'f'
         }
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.a.b[0].c = 'z';
     bar.a.e = 'z';
     t.is(foo.a.b[0].c, 'd');
@@ -47,7 +47,7 @@ test('push 1', t => {
         },
         c: [ 'c' ]
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.c.push('d');
     t.deepEqual(foo.c, [ 'c' ]);
     t.deepEqual(bar.c, [ 'c', 'd' ]);
@@ -66,7 +66,7 @@ test('push 2', t => {
             e: 'f'
         }
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.a.b.push('new value');
     t.deepEqual(foo.a.b, [ { c: 'd' } ]);
     t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
@@ -79,7 +79,7 @@ test('change length', t => {
             b: [ 1, 2, 3 ]
         }
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.a.b.length = 1;
     t.deepEqual(foo.a.b, [ 1, 2, 3 ]);
     t.is(foo.a.b.length, 3);
@@ -94,7 +94,7 @@ test('spread 1', t => {
             c: 'c'
         }
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.a = { ...bar.a, ...{ d: 'd'} };
     t.deepEqual(foo.a, { b: 'b', c: 'c' });
     t.deepEqual(bar.a, { b: 'b', c: 'c', d: 'd' });
@@ -111,7 +111,7 @@ test('spread 2', t => {
             }
         }
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.a.c = { ...bar.a.c, ...{ e: 'e'} };
     t.deepEqual(foo.a.c, { d: 'd' });
     t.deepEqual(bar.a.c, { d: 'd', e: 'e' });
@@ -128,7 +128,7 @@ test('spread 3', t => {
             ]
         }
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.a.c = [ ...bar.a.c, 'e' ];
     t.deepEqual(foo.a.c, [ 'd' ]);
     t.deepEqual(bar.a.c, [ 'd', 'e' ]);
@@ -143,7 +143,7 @@ test('spread 4', t => {
         },
         c: [ { d: 'd' } ]
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.c[0] = { ...bar.c[0], ...{ another: 'entry' } };
 
     t.deepEqual(bar.a, {
@@ -166,7 +166,7 @@ test('set an array', t => {
             b: 'b'
         }
     };
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.c = [ 'c', 'd' ];
     t.deepEqual(bar.c, [ 'c', 'd' ]);
     t.true(bar[SymMeta].ownKeys().has('c'));
@@ -178,7 +178,7 @@ test('base array', t => {
             a: 'a'
         }
     ];
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar[1] = 'b';
     t.deepEqual(bar[0], { a: 'a' });
     t.deepEqual(bar[1], 'b');
@@ -192,7 +192,7 @@ test('base array 2', t => {
             a: 'a'
         }
     ];
-    const bar = mediary(foo);
+    const bar = clone(foo);
     bar.push('b');
     t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
     t.true(bar[SymMeta].ownKeys().has('1'));
