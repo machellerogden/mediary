@@ -1,9 +1,7 @@
 'use strict';
 
 const {
-    debug,
     reduce,
-    toArray,
     lengthFromKeys,
     deepFreeze
 } = require('./util');
@@ -159,8 +157,7 @@ function realize(given) {
     const {
         target,
         patch,
-        ownKeys,
-        isArray
+        ownKeys
     } = given[SymMeta];
     return reduce([ ...ownKeys() ], (acc, k) => {
         acc[k] = Reflect.has(patch, k)
