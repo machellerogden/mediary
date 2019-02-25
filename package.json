@@ -6,8 +6,19 @@
   "scripts": {
     "test": "ava index.spec.js"
   },
-  "keywords": [],
+  "keywords": [
+    "immutable",
+    "immutability",
+    "deep",
+    "clone",
+    "structural",
+    "sharing"
+  ],
   "author": "Mac Heller-Ogden",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/machellerogden/mediary.git"
+  },
   "license": "MIT",
   "devDependencies": {
     "ava": "^1.2.1"
