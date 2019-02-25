@@ -79,3 +79,7 @@ console.log(foo); // => { a: { b: 'b', c: 'c' } }
 
 console.log(bar); // => { a: { b: 'b', c: 'c', d: 'd'  } }
 ```
+
+# License
+
+MIT
