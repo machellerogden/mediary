@@ -1,56 +1,32 @@
-'use strict'
-// require Mediary
+'use strict';
 
-const Mediary = require('.');
+// example 1
+const { clone } = require('.');
 
 const foo = {
-    bar: {
-        baz: [ 'qux' ]
+    a: {
+        b: 'b',
+        c: 'c'
     }
 };
 
-// Call any object once with Mediary.
+const bar = clone(foo);
 
-const mediatedFoo = Mediary(foo);
+bar.a.d = 'd';
 
-// An immutable object representation will be returned. To demonstration this, let's assert the equality of our example objects.
+console.log(foo); // => { a: { b: 'b', c: 'c' } }
 
-const assert = require('assert');
+console.log(bar); // => { a: { b: 'b', c: 'c', d: 'd'  } }
 
-assert.deepEqual(foo, mediatedFoo);
+// example 2
+const { SymMeta } = require('.');
 
-// We may now perform any native operation on this object without fear of mutating the original object.
+console.log(bar.a[SymMeta].patch); // => { d: 'd' }
 
-mediatedFoo.bar.baz.push('boom');
+// example 3
+foo.a = "z";
 
-// Let's assert again to make sure we know what's happening...
+console.log(foo); // => { a: { b: 'b', c: 'c' } }
+console.log(bar); // => { a: { b: 'b', c: 'c', d: 'd' } } 
 
-assert.deepEqual(foo, { bar: { baz: [ 'qux' ] } });
-assert.deepEqual(mediatedFoo, { bar: { baz: [ 'qux', 'boom' ] } });
-
-// The returned object is not a clone but rather it's a wrapper around the original object which mediates via patches which are applied via proxies and reflection.
-
-// In order to see this however, we need to inspect the internal patches with Mediary has applied. Mediary exports a `PatchSymbol` which can be used for this purpose.
-
-const { PatchSymbol } = Mediary;
-
-assert(mediatedFoo.bar.baz[PatchSymbol], [ void 0, 'boom' ]);
-
-// A sparse array is defined in this case, show that this was the only new object representation overlayed on the original data.
-
-// Mediary can even efficiently create patches for changes which arrive via the native spread operator.
-
-mediatedFoo.bar = { ...mediatedFoo.bar, ...{ bam: 'boom' } };
-
-assert.deepEqual(foo, { bar: { baz: [ 'qux' ] } });
-assert.deepEqual(mediatedFoo.bar[PatchSymbol], { bam: 'boom' });
-
-// One caveat... there is a known bug which is proving difficult to track down.
-// Patched array representations become serialized with string keys in addition to their number indexes.
-
-try {
-    assert.deepEqual(mediatedFoo, { bar: { baz: [ 'qux', 'boom' ] }, bam: 'boom' });
-} catch (e) {
-    console.log(e.message);
-    // => { bar: { baz: [ 'qux', 'boom', '0': 'qux', '1': 'boom' ], bam: 'boom' } } deepEqual { bar: { baz: [ 'qux', 'boom' ] }, bam: 'boom' } 
-}
+// TypeError: Cannot assign to read only property 'a' of object '#<Object>'
