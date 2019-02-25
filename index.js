@@ -12,11 +12,11 @@ const Sym = Symbol('mediary');
 const SymMeta = Symbol('mediary.meta');
 
 function mediary(given) {
-    if (given == null
-        || typeof given !== 'object'
-        || given[Sym]
-        || !(Object.is(given.constructor, Object) || Object.is(given.constructor, Array)))
-        return given;
+    if (given == null || typeof given !== 'object' || given[Sym]) return given;
+
+    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, Array))) {
+        throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object` or `Array`)');
+    }
 
     deepFreeze(given);
 
@@ -26,7 +26,6 @@ function mediary(given) {
     const additions = new Set();
     const deletions = new Set();
 
-    // TODO: ownKeys call is VERY expensive on large objects
     const ownKeys = () => new Set([
         ...givenKeys.filter(k => !deletions.has(k)),
         ...additions

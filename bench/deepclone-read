@@ -1,11 +1,26 @@
 #!/usr/bin/env node
 
-const { mediary } = require('..');
 const runner = require('./runner');
 const data = require('./data');
-const cloned = mediary(data);
+const { deepFreeze } = require('../util');
+deepFreeze(data);
 
-runner('mediary-read', 1000, x => {
+function deepClone(o) {
+    if (!(Object.is(o.constructor, Object) || Object.is(o.constructor, Array))) return o;
+    return Array.isArray(o)
+        ? o.reduce((acc, v, i) => {
+            acc[i] = deepClone(v);
+            return acc;
+        }, [])
+        : Object.entries(o).reduce((acc, [ k, v ]) => {
+            acc[k] = deepClone(v);
+            return acc;
+        }, {});
+}
+
+const cloned = deepClone(data);
+
+runner('deepclone-read', 1000, x => {
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         cloned[k].forEach(v => {
             v._id;

@@ -2,7 +2,8 @@
 
 const runner = require('./runner');
 const data = require('./data');
-const cloned = JSON.parse(JSON.stringify(data));
+const { deepFreeze } = require('../util');
+deepFreeze(data);
 
 const leak = [];
 
