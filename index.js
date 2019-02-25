@@ -4,7 +4,7 @@ const {
     debug,
     reduce,
     toArray,
-    getNumeric,
+    lengthFromKeys,
     deepFreeze
 } = require('./util');
 
@@ -27,9 +27,8 @@ function mediary(given) {
     const deletions = new Set();
     const ownKeys = () => new Set([
         ...additions,
-        ...givenKeys.filter((_, k) => !deletions.has(k))
+        ...givenKeys.filter(k => !deletions.has(k))
     ]);
-    const virtualLength = () => Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
 
     const changes = {
         add (p) {
@@ -72,6 +71,24 @@ function mediary(given) {
             return Reflect.deleteProperty(target, prop);
         },
 
+        getPrototypeOf (target) {
+            return Reflect.getPrototypeOf(target);
+        },
+
+        setPrototypeOf (target, prototype) {
+            return Reflect.getPrototypeOf(target, prototype);
+        },
+
+        ownKeys (target) {
+            return [ ...ownKeys() ];
+        },
+
+        has (target, prop) {
+            return !changes.deleted(prop)
+                ? ownKeys().has(prop)
+                : Reflect.has(Reflect.getPrototypeOf(given), prop);
+        },
+
         getOwnPropertyDescriptor (target, prop) {
             if (changes.deleted(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
 
@@ -85,7 +102,7 @@ function mediary(given) {
             }
 
             if (isArray && prop === 'length') {
-                const length = virtualLength();
+                const length = lengthFromKeys([ ...ownKeys() ]);
                 return {
                     writable: true,
                     configurable: false,
@@ -106,11 +123,9 @@ function mediary(given) {
         get (target, prop, receiver) {
             if (prop === Sym) return true;
             if (prop === SymMeta) return meta;
-
             if (changes.deleted(prop)) return void 0;
-
             if (prop === 'length' && isArray) {
-                return virtualLength();
+                return lengthFromKeys([ ...ownKeys() ]);
             }
 
             if (!changes.touched(prop) && givenKeys.includes(prop)) {
@@ -125,25 +140,9 @@ function mediary(given) {
             return value;
         },
 
-        getPrototypeOf (target) {
-            return Reflect.getPrototypeOf(target);
-        },
-
-        setPrototypeOf (target, prototype) {
-            return Reflect.getPrototypeOf(target, prototype);
-        },
-
-        ownKeys (target) {
-            return [ ...ownKeys() ];
-        },
-
-        has (target, prop) { // TODO: can be deleted and still has'd via of prototype... need to fix
-            return !changes.deleted(prop) && (Reflect.has(target, prop) || Reflect.has(given, prop));
-        },
-
         set (target, prop, value, receiver) {
             if (prop === 'length' && isArray) {
-                const length = Math.max.apply(null, getNumeric([ ...ownKeys() ])) + 1;
+                const length = lengthFromKeys([ ...ownKeys() ]);
                 const v = parseInt(value, 10);
                 let i = v;
                 while (length > i) {
@@ -174,12 +173,12 @@ function realize(given) {
         ownKeys,
         isArray
     } = given[SymMeta];
-    return [ ...ownKeys() ].reduce((acc, k) => {
+    return reduce([ ...ownKeys() ], (acc, k) => {
         acc[k] = Reflect.has(patch, k)
             ? patch[k]
             : target[k];
         return acc;
-    }, isArray ? [] : {});
+    });
 }
 
 const clone = given => mediary(realize(given));

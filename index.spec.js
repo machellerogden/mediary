@@ -69,7 +69,6 @@ test('push 2', t => {
     t.true(bar.a.b[SymMeta].ownKeys().has('1'));
 });
 
-// TODO
 test('change length', t => {
     const foo = {
         a: {

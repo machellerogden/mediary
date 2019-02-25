@@ -8,14 +8,10 @@ exports.debug = v =>
     && process.env.MEDIARY_DEBUG &&
     console.log(inspect(v, {
         depth: null,
-        showHidden: false,
+        showHidden: true,
+        showProxy: true,
         colors: true
     }));
-
-//const primitives = new Set([ 'undefined', 'string', 'number', 'boolean' ]);
-//const plainObjects = new Set([ '[object Object]', '[object Array]' ]);
-//exports.isPrimitive = v => primitives.has(v);
-//exports.isPlainObject = v => plainObjects.has(Object.prototype.toString.call(v));
 
 exports.reduce = (a, fn, s) => Array.isArray(a)
     ? a.reduce(fn, s || [])
@@ -25,7 +21,7 @@ exports.toArray = o => Object.entries(o).reduce((acc, [ k, v ]) => (acc[k] = v, 
 
 exports.isNumber = n => !isNaN(parseInt(n, 10)) && isFinite(n);
 
-exports.getNumeric = keys => keys.filter(exports.isNumber).map(Number);
+exports.lengthFromKeys = (keys) => Math.max.apply(null, keys.filter(exports.isNumber).map(Number)) + 1;
 
 exports.deepFreeze = o => {
     Object.freeze(o);
