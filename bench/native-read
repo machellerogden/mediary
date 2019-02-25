@@ -2,27 +2,10 @@
 
 const runner = require('./runner');
 const data = require('./data');
-const { deepFreeze } = require('../util');
-deepFreeze(data);
 
-function deepClone(o) {
-    if (!(Object.is(o.constructor, Object) || Object.is(o.constructor, Array))) return o;
-    return Array.isArray(o)
-        ? o.reduce((acc, v, i) => {
-            acc[i] = deepClone(v);
-            return acc;
-        }, [])
-        : Object.entries(o).reduce((acc, [ k, v ]) => {
-            acc[k] = deepClone(v);
-            return acc;
-        }, {});
-}
-
-const cloned = deepClone(data);
-
-runner('deepclone-read', 1000, x => {
+runner('native-read', 1000, x => {
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
-        cloned[k].forEach(v => {
+        data[k].forEach(v => {
             v._id;
             v.index;
             v.guid;
@@ -52,23 +35,23 @@ runner('deepclone-read', 1000, x => {
             v.favoriteFruit;
         });
     });
-    cloned.h;
-    cloned.i;
-    cloned.j;
-    cloned.k;
-    cloned.l;
-    cloned.m;
-    cloned.n;
-    cloned.o;
-    cloned.p;
-    cloned.q;
-    cloned.r;
-    cloned.s;
-    cloned.t;
-    cloned.u;
-    cloned.v;
-    cloned.w;
-    cloned.x;
-    cloned.y;
-    cloned.z;
+    data.h;
+    data.i;
+    data.j;
+    data.k;
+    data.l;
+    data.m;
+    data.n;
+    data.o;
+    data.p;
+    data.q;
+    data.r;
+    data.s;
+    data.t;
+    data.u;
+    data.v;
+    data.w;
+    data.x;
+    data.y;
+    data.z;
 });

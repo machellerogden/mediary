@@ -80,6 +80,41 @@ console.log(foo); // => { a: { b: 'b', c: 'c' } }
 console.log(bar); // => { a: { b: 'b', c: 'c', d: 'd'  } }
 ```
 
+# Benchmarks
+
+See [./bench](https://github.com/machellerogden/mediary/tree/master/bench) directory for test setup.
+
+Using a large single object (377 KB) and 1000 iterations for each test.
+
+_Tested on 2.2 GHz Intel Core i7 with 16 GB 1600 MHz DDR3_
+
+## Read
+
+|           |   mediary |   native |
+|-----------|-----------|----------|
+| time      |     73 MS |    13 MS |
+| rss       |    3.0 MB |   2.0 MB |
+| heapTotal |    0.5 MB |   1.5 MB |
+| heapUsed  |    1.0 MB |   1.5 MB |
+
+## Write
+
+|           |   mediary |     native |
+|-----------|-----------|------------|
+| time      |     78 MS |    1543 MS |
+| rss       |    3.3 MB |    37.0 MB |
+| heapTotal |      0 MB |    34.0 MB |
+| heapUsed  |    1.0 MB |    18.1 MB |
+
+## Create
+
+|           |   mediary | JSON.stringify/parse | recursive reduce |
+|-----------|-----------|----------------------|------------------|
+| time      |     18 MS |              3243 MS |          3480 MS |
+| rss       |    5.2 MB |             165.9 MB |         301.5 MB |
+| heapTotal |    5.5 MB |             162.0 MB |         301.5 MB |
+| heapUsed  |    2.2 MB |             139.0 MB |         194.5 MB |
+
 # License
 
 MIT
