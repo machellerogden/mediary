@@ -92,9 +92,9 @@ function mediary(given) {
         getOwnPropertyDescriptor (target, prop) {
             if (changes.deleted(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
 
-            const value = ownKeys().has(prop)
-                ? Reflect.get(target, prop)
-                : Reflect.get(given, prop);
+            const desc = Reflect.has(target, prop)
+                ? Reflect.getOwnPropertyDescriptor(target, prop)
+                : Reflect.getOwnPropertyDescriptor(given, prop);
 
             if (!changes.touched(prop) && givenKeys.includes(prop)) {
                 changes.add(prop);
@@ -102,22 +102,17 @@ function mediary(given) {
             }
 
             if (isArray && prop === 'length') {
-                const length = lengthFromKeys([ ...ownKeys() ]);
                 return {
                     writable: true,
                     configurable: false,
                     enumerable: false,
-                    value: length
+                    value: lengthFromKeys([ ...ownKeys() ])
                 };
             }
-            if (changes.added(prop) || givenKeys.includes(prop)) {
-                return {
-                    writable: true,
-                    configurable: true,
-                    enumerable: true,
-                    value
-                };
-            }
+
+            return ownKeys().has(prop)
+                ? { ...desc, writable: true, configurable: true }
+                : void 0;
         },
 
         get (target, prop, receiver) {
@@ -133,7 +128,7 @@ function mediary(given) {
                 target[prop] = mediary(given[prop]);
             }
 
-            const value = ownKeys().has(prop)
+            const value = Reflect.has(target, prop)
                 ? Reflect.get(target, prop)
                 : Reflect.get(given, prop);
 
