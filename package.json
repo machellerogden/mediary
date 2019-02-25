@@ -1,6 +1,6 @@
 {
   "name": "mediary",
-  "version": "0.0.11",
+  "version": "0.1.0",
   "description": "An object immutability helper",
   "main": "index.js",
   "scripts": {
