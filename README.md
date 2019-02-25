@@ -56,3 +56,28 @@ It is recommended that you always `'use strict'` so that an error is thrown when
 foo.a = "z"; // => TypeError: Cannot assign to read only property 'a' of object '#<Object>'
 ```
 
+# Differences from Immer
+
+First off: Immer is awesome. Use it. It's better tested and battle hardened. Mediary is still an experiment and should be used with caution.
+
+The main difference between the two is that mediary is exposes a more primitive layer than Immer, but essentially it works in the same way. In fact, mediary exports a `produce` function if you prefer to Immer's usage pattern.
+
+```
+const { produce } = require('mediary');
+
+const foo = {
+    a: {
+        b: 'b',
+        c: 'c'
+    }
+};
+
+const bar = produce(foo, draft => {
+    draft.a.d = 'd';
+    return draft;
+});
+
+console.log(foo); // => { a: { b: 'b', c: 'c' } }
+
+console.log(bar); // => { a: { b: 'b', c: 'c', d: 'd'  } }
+```
