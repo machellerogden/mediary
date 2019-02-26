@@ -6,7 +6,12 @@ exports.reduce = (a, fn, s) => Array.isArray(a)
 
 const isNumber = n => !isNaN(parseInt(n, 10)) && isFinite(n);
 
-exports.lengthFromKeys = (keys) => Math.max.apply(null, keys.filter(isNumber).map(Number)) + 1;
+exports.lengthFromKeys = (keys) => {
+    const numericKeys = keys.filter(isNumber);
+    return numericKeys.length
+        ? Math.max.apply(null, numericKeys.map(Number)) + 1
+        : 0;
+};
 
 exports.deepFreeze = o => {
     Object.freeze(o);

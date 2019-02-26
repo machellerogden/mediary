@@ -244,3 +244,19 @@ test('splice', t => {
     t.true(bar.a[SymMeta].deletions.has('1'));
     t.true(bar.a[SymMeta].deletions.has('2'));
 });
+
+test('shift', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    bar.shift();
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'b', 'c' ]);
+});
+
+test('unshift', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    bar.unshift('z');
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'z', 'a', 'b', 'c' ]);
+});

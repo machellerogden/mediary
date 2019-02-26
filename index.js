@@ -6,6 +6,8 @@ const {
     deepFreeze
 } = require('./util');
 
+const arrayProto = require('./arrayProto');
+
 const Sym = Symbol('mediary');
 const SymMeta = Symbol('mediary.meta');
 
@@ -21,6 +23,7 @@ function mediary(given) {
     const isArray = Array.isArray(given);
     const givenKeys = Reflect.ownKeys(given);
     const patch = isArray ? [] : {};
+    if (isArray) Reflect.setPrototypeOf(patch, arrayProto);
     const additions = new Set();
     const deletions = new Set();
 
@@ -137,6 +140,7 @@ function mediary(given) {
                     Reflect.deleteProperty(target, i);
                     i++;
                 }
+
                 i = length;
                 while (v > i) {
                     changes.add(i);
