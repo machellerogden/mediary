@@ -2,6 +2,8 @@
 
 > Deep "clone" without the memory complexity.
 
+*WARNING:* This is an experiment. There are still bugs.
+
 Mediary implements structural sharing via proxies in order to provide a transparent virtualization for deep cloning with low memory usage and good performance characteristics.
 
 Use Mediary's `clone` function to get an object representation which, for all intents and purposes, acts like a deeply cloned copy of your original data.
