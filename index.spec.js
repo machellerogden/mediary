@@ -268,3 +268,11 @@ test('pop', t => {
     t.deepEqual(foo, [ 'a', 'b', 'c' ]);
     t.deepEqual(bar, [ 'a', 'b' ]);
 });
+
+test('reverse', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.deepEqual([ 'c', 'b', 'a' ],  bar.reverse());
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'c', 'b', 'a' ]);
+});

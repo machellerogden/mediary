@@ -29,4 +29,14 @@ arrayProto.unshift = function (v) {
     });
 };
 
+arrayProto.reverse = function () {
+    let length = this.length;
+    let i = 0;
+    const copy = [ ...this ];
+    while (length > 0) {
+        this[i++] = copy[--length];
+    }
+    return this;
+};
+
 module.exports = arrayProto;
