@@ -58,7 +58,7 @@ test('push 1', t => {
     t.deepEqual(foo.c, [ 'c' ]);
     t.deepEqual(bar.c, [ 'c', 'd' ]);
     t.true(bar.c[SymMeta].additions.has('1'));
-    t.deepEqual(bar.c[SymMeta].patch, [ 'c', 'd' ]); // TODO: 'c' is coming from original object, though it's hard to write the proof here ... need better inspection capabilities
+    t.deepEqual(bar.c[SymMeta].patch, [ 'c', 'd' ]);
 });
 
 
@@ -78,7 +78,8 @@ test('push 2', t => {
     t.deepEqual(foo.a.b, [ { c: 'd' } ]);
     t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
     t.true(bar.a.b[SymMeta].additions.has('1'));
-    t.deepEqual(bar.a.b[SymMeta].patch, [ { c: 'd' }, 'new value']); // TODO: same as above, { c: 'd' } is coming from original object
+    t.deepEqual(bar.a.b[SymMeta].patch, [ { c: 'd' }, 'new value']);
+    t.deepEqual(bar.a.b[SymMeta].patch[0][SymMeta].patch, { c: 'd' });
 });
 
 test('change length', t => {
@@ -108,7 +109,7 @@ test('spread 1', t => {
     t.deepEqual(bar.a, { b: 'b', c: 'c', d: 'd' });
     t.deepEqual(foo, { a: { b: 'b', c: 'c' } });
     t.true(bar[SymMeta].additions.has('a'));
-    t.deepEqual(bar[SymMeta].patch, { a: { b: 'b', c: 'c', d: 'd' } }); // TODO: more to test in terms of deep patching
+    t.deepEqual(bar[SymMeta].patch, { a: { b: 'b', c: 'c', d: 'd' } });
 });
 
 test('spread 2', t => {
@@ -223,7 +224,7 @@ test('delete', t => {
     t.deepEqual(foo, { a: 'a', b: 'b' });
     t.deepEqual(bar, { a: 'a' });
     t.true(bar[SymMeta].deletions.has('b'));
-    t.deepEqual(bar[SymMeta].patch, { a: 'a' }); // TODO: 'a' is coming from original object ... need a test to prove it
+    t.deepEqual(bar[SymMeta].patch, { a: 'a' });
 });
 
 test('splice', t => {
