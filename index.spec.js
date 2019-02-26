@@ -248,7 +248,7 @@ test('splice', t => {
 test('shift', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
-    bar.shift();
+    t.is('a', bar.shift());
     t.deepEqual(foo, [ 'a', 'b', 'c' ]);
     t.deepEqual(bar, [ 'b', 'c' ]);
 });
@@ -259,4 +259,12 @@ test('unshift', t => {
     bar.unshift('z');
     t.deepEqual(foo, [ 'a', 'b', 'c' ]);
     t.deepEqual(bar, [ 'z', 'a', 'b', 'c' ]);
+});
+
+test('pop', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.is('c', bar.pop());
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'a', 'b' ]);
 });
