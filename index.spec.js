@@ -3,7 +3,7 @@
 import test from 'ava';
 import { clone, Sym, SymMeta } from '.';
 
-test('shallow', t => {
+test('basics - shallow clone', t => {
     const foo = {
         a: 'b'
     };
@@ -19,7 +19,7 @@ test('shallow', t => {
     t.deepEqual(bar[SymMeta].patch, { a: 'c', b: 'd' });
 });
 
-test('deep', t => {
+test('basics - deep clone', t => {
     const foo = {
         a: {
             b: [
@@ -62,7 +62,7 @@ test('push 1', t => {
 });
 
 
-test('push 2', t => {
+test('push', t => {
     const foo = {
         a: {
             b: [
@@ -245,7 +245,7 @@ test('splice', t => {
     t.true(bar.a[SymMeta].deletions.has('2'));
 });
 
-test('shift', t => {
+test('shift shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
     t.is('a', bar.shift());
@@ -253,7 +253,15 @@ test('shift', t => {
     t.deepEqual(bar, [ 'b', 'c' ]);
 });
 
-test('unshift', t => {
+test('shift deep', t => {
+    const foo = { a: [ 'a', 'b', 'c' ] };
+    const bar = clone(foo);
+    t.is('a', bar.a.shift());
+    t.deepEqual(foo, { a: [ 'a', 'b', 'c' ] });
+    t.deepEqual(bar, { a: [ 'b', 'c' ] });
+});
+
+test('unshift shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
     bar.unshift('z');
@@ -261,7 +269,15 @@ test('unshift', t => {
     t.deepEqual(bar, [ 'z', 'a', 'b', 'c' ]);
 });
 
-test('pop', t => {
+test('unshift deep', t => {
+    const foo = { a: [ 'a', 'b', 'c' ] };
+    const bar = clone(foo);
+    bar.a.unshift('z');
+    t.deepEqual(foo, { a: [ 'a', 'b', 'c' ] });
+    t.deepEqual(bar, { a: [ 'z', 'a', 'b', 'c' ] });
+});
+
+test('pop shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
     t.is('c', bar.pop());
@@ -269,10 +285,101 @@ test('pop', t => {
     t.deepEqual(bar, [ 'a', 'b' ]);
 });
 
-test('reverse', t => {
+test('pop deep', t => {
+    const foo = { a: [ 'a', 'b', 'c' ] };
+    const bar = clone(foo);
+    t.is('c', bar.a.pop());
+    t.deepEqual(foo, { a: [ 'a', 'b', 'c' ] });
+    t.deepEqual(bar, { a: [ 'a', 'b' ] });
+});
+
+test('reverse shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
     t.deepEqual([ 'c', 'b', 'a' ],  bar.reverse());
     t.deepEqual(foo, [ 'a', 'b', 'c' ]);
     t.deepEqual(bar, [ 'c', 'b', 'a' ]);
 });
+
+test('reverse deep', t => {
+    const foo = { a: [ 'a', 'b', 'c' ] };
+    const bar = clone(foo);
+    t.deepEqual([ 'c', 'b', 'a' ],  bar.a.reverse());
+    t.deepEqual(foo, { a: [ 'a', 'b', 'c' ] });
+    t.deepEqual(bar, { a: [ 'c', 'b', 'a' ] });
+});
+
+test('copyWithin shallow', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.deepEqual([ 'c', 'b', 'c' ],  bar.copyWithin(0, 2, 3));
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'c', 'b', 'c' ]);
+});
+
+test('copyWithin shallow 2', t => {
+    const foo = [ 'a', 'b', 'c', 'd', 'e' ];
+    const bar = clone(foo);
+    t.deepEqual([ 'a', 'd', 'e', 'd', 'e' ],  bar.copyWithin(1, 3));
+    t.deepEqual(foo, [ 'a', 'b', 'c', 'd', 'e' ]);
+    t.deepEqual(bar, [ 'a', 'd', 'e', 'd', 'e' ]);
+});
+
+test('copyWithin deep', t => {
+    const foo = { a: [ 'a', 'b', 'c', 'd', 'e' ] };
+    const bar = clone(foo);
+    t.deepEqual([ 'a', 'd', 'e', 'd', 'e' ],  bar.a.copyWithin(1, 3));
+    t.deepEqual(foo, { a: [ 'a', 'b', 'c', 'd', 'e' ] });
+    t.deepEqual(bar, { a: [ 'a', 'd', 'e', 'd', 'e' ] });
+});
+
+test('entries shallow', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.deepEqual([ [ 0, 'a' ], [ 1, 'b' ], [ 2, 'c' ] ],  [ ...bar.entries() ]);
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'a', 'b', 'c' ]);
+});
+
+// needs shim
+test.skip('every shallow', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.true(bar.every(v => typeof v === 'string'));
+    t.false(bar.every(v => typeof v === 'number'));
+    t.true(bar.every(v => [ 'a', 'b', 'c' ].includes(v)));
+    t.false(bar.every(v => [ 'b', 'c' ].includes(v)));
+    t.true(bar.every(v => v.length === 1));
+});
+
+// needs shim
+test.skip('concat shallow', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.deepEqual([ 'a', 'b', 'c', 1, 2, 3 ],  bar.concat([ 1, 2, 3]));
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'a', 'b', 'c' ]);
+});
+
+
+// TODO:
+// fill
+// filter
+// find
+// findIndex
+// flat
+// forEach
+// includes
+// indexOf
+// join
+// keys
+// lastIndexOf
+// map
+// reduce
+// reduceRight
+// slice
+// some
+// sort
+// toLocaleString
+// toString
+// values
