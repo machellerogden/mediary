@@ -341,6 +341,22 @@ test('entries shallow', t => {
     t.deepEqual(bar, [ 'a', 'b', 'c' ]);
 });
 
+test('fill shallow', t => {
+    const foo = [ 'a', 'b', 'c', 'd', 'e' ];
+    const bar = clone(foo);
+    t.deepEqual([ 'a', 'b', 0, 0, 0 ],  bar.fill(0, 2));
+    t.deepEqual(foo, [ 'a', 'b', 'c', 'd', 'e' ]);
+    t.deepEqual(bar, [ 'a', 'b', 0, 0, 0 ]);
+});
+
+test('fill shallow 2', t => {
+    const foo = [ 'a', 'b', 'c', 'd', 'e' ];
+    const bar = clone(foo);
+    t.deepEqual([ 'a', 'test', 'test', 'd', 'e' ],  bar.fill('test', 1, 3));
+    t.deepEqual(foo, [ 'a', 'b', 'c', 'd', 'e' ]);
+    t.deepEqual(bar, [ 'a', 'test', 'test', 'd', 'e' ]);
+});
+
 // needs shim
 test.skip('every shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
@@ -361,10 +377,16 @@ test.skip('concat shallow', t => {
     t.deepEqual(bar, [ 'a', 'b', 'c' ]);
 });
 
+// needs shim
+test.skip('filter shallow', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.deepEqual([ 2, 4 ],  bar.filter(v => v % 2));
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
 
 // TODO:
-// fill
-// filter
 // find
 // findIndex
 // flat
