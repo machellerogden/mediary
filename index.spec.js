@@ -261,6 +261,8 @@ test('shift deep', t => {
     t.deepEqual(bar, { a: [ 'b', 'c' ] });
 });
 
+// shift after changes
+
 test('unshift shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
@@ -276,6 +278,8 @@ test('unshift deep', t => {
     t.deepEqual(foo, { a: [ 'a', 'b', 'c' ] });
     t.deepEqual(bar, { a: [ 'z', 'a', 'b', 'c' ] });
 });
+
+// unshift after changes
 
 test('pop shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
@@ -293,6 +297,8 @@ test('pop deep', t => {
     t.deepEqual(bar, { a: [ 'a', 'b' ] });
 });
 
+// TODO pop after changes
+
 test('reverse shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
@@ -308,6 +314,8 @@ test('reverse deep', t => {
     t.deepEqual(foo, { a: [ 'a', 'b', 'c' ] });
     t.deepEqual(bar, { a: [ 'c', 'b', 'a' ] });
 });
+
+// TODO reverse after changes
 
 test('copyWithin shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
@@ -333,6 +341,8 @@ test('copyWithin deep', t => {
     t.deepEqual(bar, { a: [ 'a', 'd', 'e', 'd', 'e' ] });
 });
 
+// TODO copyWithin after changes
+
 test('entries shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
@@ -340,6 +350,9 @@ test('entries shallow', t => {
     t.deepEqual(foo, [ 'a', 'b', 'c' ]);
     t.deepEqual(bar, [ 'a', 'b', 'c' ]);
 });
+
+// TODO entries deeps
+// TODO entries after changes
 
 test('fill shallow', t => {
     const foo = [ 'a', 'b', 'c', 'd', 'e' ];
@@ -357,6 +370,9 @@ test('fill shallow 2', t => {
     t.deepEqual(bar, [ 'a', 'test', 'test', 'd', 'e' ]);
 });
 
+// TODO fill deep
+// TODO fill after changes
+
 // needs shim
 test.skip('every shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
@@ -368,6 +384,9 @@ test.skip('every shallow', t => {
     t.true(bar.every(v => v.length === 1));
 });
 
+// TODO every deep
+// TODO every after changes
+
 // needs shim
 test.skip('concat shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
@@ -376,6 +395,9 @@ test.skip('concat shallow', t => {
     t.deepEqual(foo, [ 'a', 'b', 'c' ]);
     t.deepEqual(bar, [ 'a', 'b', 'c' ]);
 });
+
+// TODO concat deep
+// TODO concat after changes
 
 // needs shim
 test.skip('filter shallow', t => {
@@ -386,8 +408,23 @@ test.skip('filter shallow', t => {
     t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
 });
 
-// TODO:
-// find
+// TODO filter deep
+// TODO filter after changes
+
+test('find shallow', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.deepEqual(3,  bar.find(v => v === 3));
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
+
+// TODO find deep
+// TODO find after changes
+
+
+
+// TODO - untested array prototype methods - many likely need shims:
 // findIndex
 // flat
 // forEach
