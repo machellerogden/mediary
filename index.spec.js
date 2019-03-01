@@ -573,7 +573,7 @@ test('values', t => {
     t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
 });
 
-test.skip('flat', t => {
+test('flat', t => {
     const foo = [ 1, [ 2, [ 3, [ 4, 5 ] ] ] ];
     const bar = clone(foo);
     t.deepEqual([ 1, 2, [ 3, [ 4, 5 ] ] ], bar.flat());

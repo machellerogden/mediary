@@ -128,4 +128,23 @@ arrayProto.map = function (fn) {
     return acc;
 };
 
+arrayProto.flat = function (depth = 1) {
+    var acc = [];
+    var length = this.length;
+    var i = 0;
+    while (i < length) {
+        if (Array.isArray(this[i])) {
+            if (depth > 0) {
+                acc = [ ...acc, ...arrayProto.flat.call(this[i], depth - 1) ];
+            } else {
+                acc = [ ...acc, ...this[i] ];
+            }
+        } else {
+            acc = [ ...acc, this[i] ];
+        }
+        i++;
+    }
+    return acc;
+};
+
 module.exports = arrayProto;
