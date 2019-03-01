@@ -573,6 +573,18 @@ test('values', t => {
     t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
 });
 
+test.skip('flat', t => {
+    const foo = [ 1, [ 2, [ 3, [ 4, 5 ] ] ] ];
+    const bar = clone(foo);
+    t.deepEqual([ 1, 2, [ 3, [ 4, 5 ] ] ], bar.flat());
+    t.deepEqual([ 1, 2, 3, [ 4, 5 ] ], bar.flat(2));
+    t.deepEqual([ 1, 2, 3, 4, 5 ], bar.flat(3));
+    t.deepEqual(foo, [ 1, [ 2, [ 3, [ 4, 5 ] ] ] ]);
+    t.deepEqual(bar, [ 1, [ 2, [ 3, [ 4, 5 ] ] ] ]);
+});
+
+
+
 // TODO - untested array prototype methods - many likely need shims:
 // flat
 // forEach
