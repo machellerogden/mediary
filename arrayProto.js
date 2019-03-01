@@ -35,24 +35,97 @@ arrayProto.unshift = function (v) {
 
 arrayProto.reverse = function () {
     var length = this.length;
-    var i = 0;
     var shallow = [ ...this ];
+    var i = 0;
     while (length > 0) this[i++] = shallow[--length];
     return this;
 };
 
-arrayProto.copyWithin = function (to, start, end) {
+arrayProto.copyWithin = function (at, start, end) {
     var selection = [ ...this ].slice(start, end);
-    var i = 0;
-    var insertStart = to;
-    var insertEnd = to + selection.length;
+    var until = at + selection.length;
     var end = ((this.length + selection.length) || 1) - 1;
+    var i = 0;
     while (i < end) {
         let j = 0;
-        while (i >= insertStart && i < insertEnd) this[i++] = selection[j++];
+        while (i >= at && i < until) this[i++] = selection[j++];
         i++;
     }
     return this;
+};
+
+arrayProto.reduce = function (fn, init) {
+    var acc = init == null
+        ? arrayProto.shift.call(this)
+        : init;
+    var length = this.length;
+    var i = 0;
+    while (i < length) {
+        acc = fn(acc, this[i], i, this);
+        i++;
+    }
+    return acc;
+};
+
+arrayProto.reduceRight = function (fn, init) {
+    var acc = init == null
+        ? arrayProto.pop.call(this)
+        : init;
+    var i = this.length;
+    while (i-- > 0) {
+        acc = fn(acc, this[i], i, this);
+    }
+    return acc;
+};
+
+arrayProto.filter = function (fn, r) {
+    r = r || this;
+    var i = 0;
+    var length = r.length;
+    var acc = [];
+    while (i < length) {
+        if (fn(r[i], i, r)) acc.push(r[i]);
+        i++;
+    }
+    return acc;
+};
+
+arrayProto.every = function (fn, r) {
+    r = r || this;
+    var i = 0;
+    var length = r.length;
+    var acc = true;
+    while (i < length) {
+        acc = acc && fn(r[i], i, r);
+        i++;
+    }
+    return acc;
+};
+
+arrayProto.concat = function (...args) {
+    var i = 0;
+    var end = args.length;
+    var acc = this;
+    while (i < end) {
+        if (Array.isArray(args[i])) {
+            acc = [ ...acc, ...args[i] ];
+        } else {
+            acc = [ ...acc, args[i] ];
+        }
+        i++;
+    }
+    return acc;
+};
+
+arrayProto.map = function (fn) {
+    var length = this.length;
+    var acc = [];
+    var i = 0;
+    while (i < length) {
+        acc[i] = fn(this[i], i, this);
+        i++;
+    }
+    return acc;
 };
 
 module.exports = arrayProto;

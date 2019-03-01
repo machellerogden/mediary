@@ -3,7 +3,7 @@
 import test from 'ava';
 import { clone, Sym, SymMeta } from '.';
 
-test('basics - shallow clone', t => {
+test('basics shallow', t => {
     const foo = {
         a: 'b'
     };
@@ -19,7 +19,7 @@ test('basics - shallow clone', t => {
     t.deepEqual(bar[SymMeta].patch, { a: 'c', b: 'd' });
 });
 
-test('basics - deep clone', t => {
+test('basics deep', t => {
     const foo = {
         a: {
             b: [
@@ -46,55 +46,6 @@ test('basics - deep clone', t => {
     t.deepEqual(bar.a[SymMeta].patch.b[SymMeta].patch[0][SymMeta].patch, { c: 'z' });
 });
 
-test('push 1', t => {
-    const foo = {
-        a: {
-            b: 'b',
-        },
-        c: [ 'c' ]
-    };
-    const bar = clone(foo);
-    bar.c.push('d');
-    t.deepEqual(foo.c, [ 'c' ]);
-    t.deepEqual(bar.c, [ 'c', 'd' ]);
-    t.true(bar.c[SymMeta].additions.has('1'));
-    t.deepEqual(bar.c[SymMeta].patch, [ 'c', 'd' ]);
-});
-
-
-test('push', t => {
-    const foo = {
-        a: {
-            b: [
-                {
-                    c: 'd'
-                }
-            ],
-            e: 'f'
-        }
-    };
-    const bar = clone(foo);
-    bar.a.b.push('new value');
-    t.deepEqual(foo.a.b, [ { c: 'd' } ]);
-    t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
-    t.true(bar.a.b[SymMeta].additions.has('1'));
-    t.deepEqual(bar.a.b[SymMeta].patch, [ { c: 'd' }, 'new value']);
-    t.deepEqual(bar.a.b[SymMeta].patch[0][SymMeta].patch, { c: 'd' });
-});
-
-test('change length', t => {
-    const foo = {
-        a: {
-            b: [ 1, 2, 3 ]
-        }
-    };
-    const bar = clone(foo);
-    bar.a.b.length = 1;
-    t.deepEqual(foo.a.b, [ 1, 2, 3 ]);
-    t.is(foo.a.b.length, 3);
-    t.is(bar.a.b.length, 1);
-    t.deepEqual(bar.a.b, [ 1 ]);
-});
 
 test('spread 1', t => {
     const foo = {
@@ -211,10 +162,64 @@ test('base array 2', t => {
     bar.push('b');
     t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
     t.true(bar[SymMeta].additions.has('1'));
-    t.deepEqual(bar[SymMeta].patch, [ { a: 'a' }, 'b' ]);
+    t.false(bar[SymMeta].additions.has('2'));
+    bar.push('b');
+    t.deepEqual(bar, [ { a: 'a' }, 'b', 'b' ]);
+    t.deepEqual(foo, [ { a: 'a' } ]);
+    t.true(bar[SymMeta].additions.has('2'));
+    t.deepEqual(bar[SymMeta].patch, [ { a: 'a' }, 'b', 'b' ]);
 });
 
-test('delete', t => {
+test('change length', t => {
+    const foo = {
+        a: {
+            b: [ 1, 2, 3 ]
+        }
+    };
+    const bar = clone(foo);
+    bar.a.b.length = 1;
+    t.deepEqual(foo.a.b, [ 1, 2, 3 ]);
+    t.is(foo.a.b.length, 3);
+    t.is(bar.a.b.length, 1);
+    t.deepEqual(bar.a.b, [ 1 ]);
+});
+
+test('push 1', t => {
+    const foo = {
+        a: {
+            b: 'b',
+        },
+        c: [ 'c' ]
+    };
+    const bar = clone(foo);
+    bar.c.push('d');
+    t.deepEqual(foo.c, [ 'c' ]);
+    t.deepEqual(bar.c, [ 'c', 'd' ]);
+    t.true(bar.c[SymMeta].additions.has('1'));
+    t.deepEqual(bar.c[SymMeta].patch, [ 'c', 'd' ]);
+});
+
+test('push 2', t => {
+    const foo = {
+        a: {
+            b: [
+                {
+                    c: 'd'
+                }
+            ],
+            e: 'f'
+        }
+    };
+    const bar = clone(foo);
+    bar.a.b.push('new value');
+    t.deepEqual(foo.a.b, [ { c: 'd' } ]);
+    t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
+    t.true(bar.a.b[SymMeta].additions.has('1'));
+    t.deepEqual(bar.a.b[SymMeta].patch, [ { c: 'd' }, 'new value']);
+    t.deepEqual(bar.a.b[SymMeta].patch[0][SymMeta].patch, { c: 'd' });
+});
+
+test('delete shallow', t => {
     const foo = {
         a: 'a',
         b: 'b'
@@ -227,7 +232,42 @@ test('delete', t => {
     t.deepEqual(bar[SymMeta].patch, { a: 'a' });
 });
 
-test('splice', t => {
+test('delete deep', t => {
+    const foo = {
+        a: 'a',
+        b: {
+            c: {
+                d: 'd'
+            },
+        }
+    };
+    const bar = clone(foo);
+    delete bar.b.c.d;
+    t.deepEqual(foo, { a: 'a', b: { c: { d: 'd' } } });
+    t.deepEqual(bar, { a: 'a', b: { c: { } } });
+    t.true(bar.b.c[SymMeta].deletions.has('d'));
+    t.deepEqual(bar.b.c[SymMeta].patch, {});
+    bar.b.c.a = "a";
+    t.true(bar.b.c[SymMeta].additions.has('a'));
+    t.false(bar.b.c[SymMeta].deletions.has('a'));
+    t.deepEqual(bar.b.c[SymMeta].patch, { a: "a" });
+    delete bar.b.c.a;
+    t.true(bar.b.c[SymMeta].deletions.has('a'));
+    t.deepEqual(bar.b.c[SymMeta].patch, {});
+});
+
+test('splice shallow', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    bar.splice(1);
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar, [ 'a' ]);
+    t.deepEqual(bar[SymMeta].patch, [ 'a' ]);
+    t.true(bar[SymMeta].deletions.has('1'));
+    t.true(bar[SymMeta].deletions.has('2'));
+});
+
+test('splice deep', t => {
     const foo = {
         a: [ 'a', 'b', 'c' ]
     };
@@ -240,6 +280,7 @@ test('splice', t => {
         a: [ 'a' ]
     });
     t.deepEqual(bar[SymMeta].patch, { a: [ 'a' ] });
+    t.true(bar[SymMeta].patch.a[Sym]);
     t.deepEqual(bar.a[SymMeta].patch, [ 'a' ]);
     t.true(bar.a[SymMeta].deletions.has('1'));
     t.true(bar.a[SymMeta].deletions.has('2'));
@@ -258,10 +299,11 @@ test('shift deep', t => {
     const bar = clone(foo);
     t.is('a', bar.a.shift());
     t.deepEqual(foo, { a: [ 'a', 'b', 'c' ] });
-    t.deepEqual(bar, { a: [ 'b', 'c' ] });
+    bar.a = [ 'foo' ];
+    t.is('foo', bar.a.shift());
+    t.deepEqual(bar, { a: [] });
+    t.deepEqual(bar.a, []);
 });
-
-// shift after changes
 
 test('unshift shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
@@ -339,9 +381,13 @@ test('copyWithin deep', t => {
     t.deepEqual([ 'a', 'd', 'e', 'd', 'e' ],  bar.a.copyWithin(1, 3));
     t.deepEqual(foo, { a: [ 'a', 'b', 'c', 'd', 'e' ] });
     t.deepEqual(bar, { a: [ 'a', 'd', 'e', 'd', 'e' ] });
+    bar.a[1] = 'b';
+    bar.a[2] = 'c';
+    t.deepEqual(foo, { a: [ 'a', 'b', 'c', 'd', 'e' ] });
+    t.deepEqual(bar, { a: [ 'a', 'b', 'c', 'd', 'e' ] });
+    t.deepEqual([ 'a', 'd', 'e', 'd', 'e' ],  bar.a.copyWithin(1, 3));
+    t.deepEqual(bar, { a: [ 'a', 'd', 'e', 'd', 'e' ] });
 });
-
-// TODO copyWithin after changes
 
 test('entries shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
@@ -351,8 +397,15 @@ test('entries shallow', t => {
     t.deepEqual(bar, [ 'a', 'b', 'c' ]);
 });
 
-// TODO entries deeps
-// TODO entries after changes
+test('entries deep', t => {
+    const foo = { a: [ 'a', 'b', 'c' ] };
+    const bar = clone(foo);
+    t.deepEqual([ [ 0, 'a' ], [ 1, 'b' ], [ 2, 'c' ] ],  [ ...bar.a.entries() ]);
+    t.deepEqual(foo.a, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar.a, [ 'a', 'b', 'c' ]);
+    bar.a[2] = 'boom';
+    t.deepEqual([ [ 0, 'a' ], [ 1, 'b' ], [ 2, 'boom' ] ],  [ ...bar.a.entries() ]);
+});
 
 test('fill shallow', t => {
     const foo = [ 'a', 'b', 'c', 'd', 'e' ];
@@ -370,11 +423,60 @@ test('fill shallow 2', t => {
     t.deepEqual(bar, [ 'a', 'test', 'test', 'd', 'e' ]);
 });
 
-// TODO fill deep
-// TODO fill after changes
+test('fill deep', t => {
+    const foo = { a: [ 'a', 'b', 'c', 'd', 'e' ] };
+    const bar = clone(foo);
+    t.deepEqual([ 'a', 'test', 'test', 'd', 'e' ],  bar.a.fill('test', 1, 3));
+    t.deepEqual(foo, { a: [ 'a', 'b', 'c', 'd', 'e' ] });
+    t.deepEqual(bar, { a: [ 'a', 'test', 'test', 'd', 'e' ] });
+    bar.a[1] = 'boom';
+    t.deepEqual(bar, { a: [ 'a', 'boom', 'test', 'd', 'e' ] });
+    t.deepEqual([ 'a', 'test', 'test', 'd', 'e' ],  bar.a.fill('test', 1, 2));
+});
 
-// needs shim
-test.skip('every shallow', t => {
+test('find shallow', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.deepEqual(3,  bar.find(v => v === 3));
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
+
+test('find deep', t => {
+    const foo = { a: [ 1, 2, 3, 4, 5 ] };
+    const bar = clone(foo);
+    t.deepEqual(3,  bar.a.find(v => v === 3));
+    t.deepEqual(foo, { a: [ 1, 2, 3, 4, 5 ] });
+    t.deepEqual(bar, { a: [ 1, 2, 3, 4, 5 ] });
+    bar.a[2] = 0;
+    t.deepEqual(bar, { a: [ 1, 2, 0, 4, 5 ] });
+    t.is(void 0,  bar.a.find(v => v === 3));
+    bar.a[4] = 3;
+    t.is(3,  bar.a.find(v => v === 3));
+});
+
+test('findIndex shallow', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.deepEqual(2,  bar.findIndex(v => v === 3));
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
+
+test('findIndex deep', t => {
+    const foo = { a: [ 1, 2, 3, 4, 5 ] };
+    const bar = clone(foo);
+    t.deepEqual(2,  bar.a.findIndex(v => v === 3));
+    t.deepEqual(foo, { a: [ 1, 2, 3, 4, 5 ] });
+    t.deepEqual(bar, { a: [ 1, 2, 3, 4, 5 ] });
+    bar.a[2] = 0;
+    t.deepEqual(bar, { a: [ 1, 2, 0, 4, 5 ] });
+    t.is(-1,  bar.a.findIndex(v => v === 3));
+    bar.a[4] = 3;
+    t.is(4, bar.a.findIndex(v => v === 3));
+});
+
+test('every shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
     t.true(bar.every(v => typeof v === 'string'));
@@ -387,8 +489,7 @@ test.skip('every shallow', t => {
 // TODO every deep
 // TODO every after changes
 
-// needs shim
-test.skip('concat shallow', t => {
+test('concat shallow', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
     t.deepEqual([ 'a', 'b', 'c', 1, 2, 3 ],  bar.concat([ 1, 2, 3]));
@@ -399,11 +500,10 @@ test.skip('concat shallow', t => {
 // TODO concat deep
 // TODO concat after changes
 
-// needs shim
-test.skip('filter shallow', t => {
+test('filter shallow', t => {
     const foo = [ 1, 2, 3, 4, 5 ];
     const bar = clone(foo);
-    t.deepEqual([ 2, 4 ],  bar.filter(v => v % 2));
+    t.deepEqual([ 1, 3, 5 ],  bar.filter(v => v % 2));
     t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
     t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
 });
@@ -411,21 +511,53 @@ test.skip('filter shallow', t => {
 // TODO filter deep
 // TODO filter after changes
 
-test('find shallow', t => {
+test('reduce shallow', t => {
     const foo = [ 1, 2, 3, 4, 5 ];
     const bar = clone(foo);
-    t.deepEqual(3,  bar.find(v => v === 3));
+    // every value is 2
+    t.falsy(bar.reduce((acc, v) => (acc && v % 2), true));
+    // some values are 2
+    t.truthy(bar.reduce((acc, v) => (acc || v % 2), false));
+    // double up
+    t.deepEqual([ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5 ], bar.reduce((acc, v) => {
+        acc = [ ...acc, v, v ];
+        return acc;
+    }, []));
     t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
     t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
 });
 
-// TODO find deep
-// TODO find after changes
+// TODO reduce deep
+// TODO reduce after changes
 
+test('reduceRight shallow', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    // every value is 2
+    t.falsy(bar.reduceRight((acc, v) => (acc && v % 2), true));
+    // some values are 2
+    t.truthy(bar.reduceRight((acc, v) => (acc || v % 2), false));
+    // double up
+    t.deepEqual([ 5, 5, 4, 4, 3, 3, 2, 2, 1, 1 ], bar.reduceRight((acc, v) => {
+        acc = [ ...acc, v, v ];
+        return acc;
+    }, []));
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
 
+test('map shallow', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.deepEqual([ 11, 12, 13, 14, 15 ], bar.map(v => v + 10));
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
+
+// TODO map deep
+// TODO map after changes
 
 // TODO - untested array prototype methods - many likely need shims:
-// findIndex
 // flat
 // forEach
 // includes
@@ -433,9 +565,6 @@ test('find shallow', t => {
 // join
 // keys
 // lastIndexOf
-// map
-// reduce
-// reduceRight
 // slice
 // some
 // sort
