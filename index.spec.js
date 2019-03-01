@@ -557,17 +557,31 @@ test('map shallow', t => {
 // TODO map deep
 // TODO map after changes
 
+test('keys', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.deepEqual([ 0, 1, 2, 3, 4 ], [ ...bar.keys() ]);
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
+
+test('values', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.deepEqual([ 1, 2, 3, 4, 5 ], [ ...bar.values() ]);
+    t.deepEqual(foo, [ 1, 2, 3, 4, 5 ]);
+    t.deepEqual(bar, [ 1, 2, 3, 4, 5 ]);
+});
+
 // TODO - untested array prototype methods - many likely need shims:
 // flat
 // forEach
 // includes
 // indexOf
 // join
-// keys
 // lastIndexOf
 // slice
 // some
 // sort
 // toLocaleString
 // toString
-// values
