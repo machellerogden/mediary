@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-const { mediary } = require('..');
 const runner = require('./runner');
 const data = require('./data');
 
-runner('mediary-write', 1000, x => {
+runner('native-write', 1000, x => {
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         data[k].forEach(v => {
             v._id = 123;
