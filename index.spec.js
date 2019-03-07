@@ -633,9 +633,15 @@ test('indexOf', t => {
     t.is(-1, bar.indexOf({ b: "b" }));
 });
 
+test('join', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.is('a,b,c', bar.join());
+    t.is('abc', bar.join(''));
+    // TODO - more tests!! rushing away to play mario kart with wife
+});
 
 // TODO - untested array prototype methods - many likely need shims:
-// join
 // lastIndexOf
 // slice
 // some

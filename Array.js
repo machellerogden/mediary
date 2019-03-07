@@ -159,6 +159,18 @@ arrayProto.map = function (fn) {
     return acc;
 };
 
+arrayProto.join = function (sep = ',') {
+    var length = this.length;
+    var acc = '';
+    var i = 0;
+    while (i < length) {
+        acc += String(this[i]);
+        i++;
+        if (i < length) acc += sep;
+    }
+    return acc;
+};
+
 arrayProto.forEach = function (fn) {
     var length = this.length;
     var acc = [];
