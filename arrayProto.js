@@ -134,7 +134,7 @@ arrayProto.flat = function (depth = 1) {
     var i = 0;
     while (i < length) {
         if (Array.isArray(this[i])) {
-            if (depth > 0) {
+            if (depth > 1) {
                 acc = [ ...acc, ...arrayProto.flat.call(this[i], depth - 1) ];
             } else {
                 acc = [ ...acc, ...this[i] ];

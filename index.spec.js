@@ -586,7 +586,6 @@ test('flat', t => {
 
 
 // TODO - untested array prototype methods - many likely need shims:
-// flat
 // forEach
 // includes
 // indexOf
