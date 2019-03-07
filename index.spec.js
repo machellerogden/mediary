@@ -583,12 +583,58 @@ test('flat', t => {
     t.deepEqual(bar, [ 1, [ 2, [ 3, [ 4, 5 ] ] ] ]);
 });
 
+test('forEach', t => {
+    const foo = [ 1, 2, 3, 4, 5 ];
+    const bar = clone(foo);
+    t.plan(5);
+    let i = 1;
+    bar.forEach(v => t.is(i++, v));
+});
+
+// TODO forEach - test other call signatures
+// TODO forEach - test after changes signatures
+// TODO forEach - test deep
+
+test('includes', t => {
+    const a = { a: "a" };
+    const b = { b: "b" };
+    const foo = [ 1, 2, a, [ 4 , b ] ];
+    const bar = clone(foo);
+    t.is(true, bar.includes(a));
+    t.is(true, bar.includes(1));
+    bar[0] = 2;
+    t.is(false, bar.includes(1));
+    t.is(true, bar.includes(2));
+    t.is(true, bar.includes(a));
+    bar[2].a; // it should be noted that accessing `a` proxies the object...
+    t.is(false, bar.includes(a)); // and now `includes` will return false. this is correct but may lead to confusion.
+    t.is(false, bar.includes({ a: "a" }));
+    t.is(true, bar[3].includes(4));
+    t.is(true, bar[3].includes(b));
+    bar[3][0] = 6;
+    t.is(false, bar[3].includes(4));
+    t.is(true, bar[3].includes(b));
+    bar[3][1] = 5;
+    t.is(true, bar[3].includes(5));
+});
+
+test('indexOf', t => {
+    const a = { b: "b" };
+    const foo = [ 1, 2, a, 4, 5 ];
+    const bar = clone(foo);
+    t.is(2, bar.indexOf(a));
+    bar[2].a; // it should be noted that accessing `a` proxies the object...
+    t.is(-1, bar.indexOf(a)); // and now `indexOf` will return -1. this is correct but may lead to confusion.
+    t.is(0, bar.indexOf(1));
+    t.is(1, bar.indexOf(2));
+    bar[0] = 2;
+    t.is(-1, bar.indexOf(1));
+    t.is(0, bar.indexOf(2));
+    t.is(-1, bar.indexOf({ b: "b" }));
+});
 
 
 // TODO - untested array prototype methods - many likely need shims:
-// forEach
-// includes
-// indexOf
 // join
 // lastIndexOf
 // slice

@@ -8,6 +8,8 @@
  * unneccesary.
  */
 
+const { SymMeta } = require('./Sym');
+
 const arrayProto = [];
 
 arrayProto.shift = function () {
@@ -78,6 +80,35 @@ arrayProto.reduceRight = function (fn, init) {
     return acc;
 };
 
+arrayProto.includes = function (v) {
+    var length = this.length;
+    var i = 0;
+    var { patch, target, additions, deletions } = this[SymMeta];
+    while (i < length) {
+        if (additions.has(String(i)) || deletions.has(String(i))) {
+            if (Object.is(patch[i++], v)) return true;
+        } else {
+            if (Object.is(target[i++], v)) return true;
+        }
+    }
+    return false;
+};
+
+arrayProto.indexOf = function (v) {
+    var length = this.length;
+    var i = 0;
+    var { patch, target, additions, deletions } = this[SymMeta];
+    while (i < length) {
+        if (additions.has(String(i)) || deletions.has(String(i))) {
+            if (Object.is(patch[i], v)) return i;
+        } else {
+            if (Object.is(target[i], v)) return i;
+        }
+        i++;
+    }
+    return -1;
+};
+
 arrayProto.filter = function (fn, r) {
     r = r || this;
     var i = 0;
@@ -126,6 +157,17 @@ arrayProto.map = function (fn) {
         i++;
     }
     return acc;
+};
+
+arrayProto.forEach = function (fn) {
+    var length = this.length;
+    var acc = [];
+    var i = 0;
+    while (i < length) {
+        fn(this[i], i, this);
+        i++;
+    }
+    return;
 };
 
 arrayProto.flat = function (depth = 1) {

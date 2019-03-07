@@ -1,15 +1,17 @@
 'use strict';
 
 const {
+    Sym,
+    SymMeta
+} = require('./Sym');
+
+const ArrayPrototype = require('./Array');
+
+const {
     reduce,
     lengthFromKeys,
     deepFreeze
 } = require('./util');
-
-const arrayProto = require('./arrayProto');
-
-const Sym = Symbol('mediary');
-const SymMeta = Symbol('mediary.meta');
 
 function mediary(given) {
     if (given == null || typeof given !== 'object' || given[Sym]) return given;
@@ -23,7 +25,7 @@ function mediary(given) {
     const isArray = Array.isArray(given);
     const givenKeys = Reflect.ownKeys(given);
     const patch = isArray ? [] : {};
-    if (isArray) Reflect.setPrototypeOf(patch, arrayProto);
+    if (isArray) Reflect.setPrototypeOf(patch, ArrayPrototype);
     const additions = new Set();
     const deletions = new Set();
 
