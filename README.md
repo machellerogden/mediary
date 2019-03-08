@@ -97,7 +97,7 @@ This test forces a memory leak and push 1000 "clones" to an array.
 Four clone implementations are tested:
 
    * `mediary.clone(data)`
-   * recursive 'deepClone' (see [./bench/deepclone-create](./bench/deepclone-create)
+   * `deepClone(data)` (see [./bench/deepclone-create](./bench/deepclone-create) for implementation)
    * `JSON.parse(JSON.stringify(data))`
    * `mediary.realize(mediary.clone(data))`
 
