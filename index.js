@@ -158,7 +158,8 @@ function mediary(given) {
 }
 
 function realize(given) {
-    if (typeof given !== 'object'
+    if (given == null
+        || typeof given !== 'object'
         || !given[Sym]) return given;
     const {
         target,
@@ -166,9 +167,7 @@ function realize(given) {
         ownKeys
     } = given[SymMeta];
     return reduce([ ...ownKeys() ], (acc, k) => {
-        acc[k] = Reflect.has(patch, k)
-            ? patch[k]
-            : target[k];
+        acc[k] = realize(given[k]);
         return acc;
     });
 }

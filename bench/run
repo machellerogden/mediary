@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+./bench/mediary-create
+./bench/stringify-create
+./bench/deepclone-create
+./bench/mediary-read
+./bench/mediary-write
+./bench/realize-create
+./bench/realize-write
+./bench/native-read
+./bench/native-write

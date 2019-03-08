@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import { clone, Sym, SymMeta } from '.';
+import { clone, realize, Sym, SymMeta } from '.';
 
 test('basics shallow', t => {
     const foo = {
@@ -633,6 +633,22 @@ test('indexOf', t => {
     t.is(-1, bar.indexOf({ b: "b" }));
 });
 
+test('lastIndexOf', t => {
+    const a = { b: "b" };
+    const foo = [ 1, 2, a, 4, 4 ];
+    const bar = clone(foo);
+    t.is(4, bar.lastIndexOf(4));
+    t.is(2, bar.lastIndexOf(a));
+    bar[2].a; // it should be noted that accessing `a` proxies the object...
+    t.is(-1, bar.lastIndexOf(a)); // and now `lastIndexOf` will return -1. this is correct but may lead to confusion.
+    t.is(0, bar.lastIndexOf(1));
+    t.is(1, bar.lastIndexOf(2));
+    bar[0] = 2;
+    t.is(-1, bar.lastIndexOf(1));
+    t.is(1, bar.lastIndexOf(2));
+    t.is(-1, bar.lastIndexOf({ b: "b" }));
+});
+
 test('join', t => {
     const foo = [ 'a', 'b', 'c' ];
     const bar = clone(foo);
@@ -641,10 +657,90 @@ test('join', t => {
     // TODO - more tests!! rushing away to play mario kart with wife
 });
 
-// TODO - untested array prototype methods - many likely need shims:
-// lastIndexOf
-// slice
-// some
-// sort
-// toLocaleString
-// toString
+test('slice shallow', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    bar.slice(1);
+    t.deepEqual(foo, [ 'a', 'b', 'c' ]);
+    t.deepEqual(bar.slice(1), [ 'b', 'c' ]);
+    t.deepEqual(bar.slice(1, 2), [ 'b' ]);
+    t.deepEqual(bar.slice(-1), [ 'c' ]);
+    t.deepEqual(bar.slice(-1, 1), []);
+    t.deepEqual(bar, [ 'a', 'b', 'c' ]);
+});
+
+// TODO slice deep
+// TODO slice after changes
+
+test('some shallow', t => {
+    const foo = [ 'a', 'b', 'c' ];
+    const bar = clone(foo);
+    t.true(bar.some(v => typeof v === 'string'));
+    t.false(bar.some(v => typeof v === 'number'));
+    t.true(bar.some(v => [ 'a', 'b', 'c' ].includes(v)));
+    t.true(bar.some(v => 'c' === v));
+    t.true(bar.some(v => v.length === 1));
+});
+
+test('sort shallow', t => {
+    const foo = [ 'c', 'b', 'a', 'd' ];
+    const bar = clone(foo);
+    t.deepEqual(bar.sort(), [ 'a', 'b', 'c', 'd' ]);
+    t.deepEqual(bar, [ 'a', 'b', 'c', 'd' ]);
+    t.deepEqual(foo, [ 'c', 'b', 'a', 'd' ]);
+});
+
+// TODO sort deep
+// TODO sort after changes
+
+test('toLocaleString shallow', t => {
+    var foo = ['¥7', 500, 8123, 12]; 
+    var bar = clone(foo);
+    t.is(bar.toLocaleString('ja-JP', { style: 'currency', currency: 'JPY' }), '¥7,¥500,¥8,123,¥12');
+    bar[0] = 7;
+    t.is(bar.toLocaleString('ja-JP', { style: 'currency', currency: 'JPY' }), '¥7,¥500,¥8,123,¥12');
+});
+
+// TODO toLocaleString deep
+
+test('toString shallow', t => {
+    var foo = ['a', 'b', 'c', 'd']; 
+    var bar = clone(foo);
+    t.is(bar.toString(), 'a,b,c,d');
+    bar[1] = 'z';
+    t.is(bar.toString(), 'a,z,c,d');
+});
+
+
+test('realize basics shallow', t => {
+    const foo = {
+        a: 'b'
+    };
+    const bar = realize(clone(foo));
+    bar.a = 'c';
+    bar.b = 'd';
+    t.is(foo.a, 'b');
+    t.is(foo.b, void 0);
+    t.is(bar.a, 'c');
+    t.is(bar.b, 'd');
+});
+
+test('realize basics deep', t => {
+    const foo = {
+        a: {
+            b: [
+                {
+                    c: 'd'
+                }
+            ],
+            e: 'f'
+        }
+    };
+    const bar = realize(clone(foo));
+    bar.a.b[0].c = 'z';
+    bar.a.e = 'z';
+    t.is(foo.a.b[0].c, 'd');
+    t.is(bar.a.b[0].c, 'z');
+    t.is(foo.a.e, 'f');
+    t.is(bar.a.e, 'z');
+});

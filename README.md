@@ -2,9 +2,9 @@
 
 > Deep "clone" without the memory complexity.
 
-*WARNING:* This is an experiment. There are still bugs.
+*WARNING:* This is an experiment. Use at your own risk.
 
-Mediary implements structural sharing via proxies in order to provide a transparent virtualization for deep cloning with low memory usage and good performance characteristics.
+Mediary implements structural sharing via proxies in order to provide a transparent virtualization for deep cloning with low memory usage and reasonable performance characteristics.
 
 Use Mediary's `clone` function to get an object representation which, for all intents and purposes, acts like a deeply cloned copy of your original data.
 
@@ -88,31 +88,56 @@ See [./bench](https://github.com/machellerogden/mediary/tree/master/bench) direc
 
 Using a large single object (377 KB) and 1000 iterations for each test.
 
-_Tested on 2.2 GHz Intel Core i7 with 16 GB 1600 MHz DDR3_
+_Tested on 2.6 GHz Intel Core i7 with 16 GB 2400 MHz DDR4_
 
-## Read
+# Object Creation
 
-|           |   mediary |   native |
-|-----------|-----------|----------|
-| time      |     73 MS |    13 MS |
-| rss       |    3.0 MB |   2.0 MB |
-| heapUsed  |    1.0 MB |   1.5 MB |
+This test forces a memory leak and push 1000 "clones" to an array.
 
-## Write
+Four clone implementations are tested:
 
-|           |   mediary |     native |
-|-----------|-----------|------------|
-| time      |     78 MS |    1543 MS |
-| rss       |    3.3 MB |    37.0 MB |
-| heapUsed  |    1.0 MB |    18.1 MB |
+   * `mediary.clone(data)`
+   * recursive 'deepClone' (see [./bench/deepclone-create](./bench/deepclone-create)
+   * `JSON.parse(JSON.stringify(data))`
+   * `mediary.realize(mediary.clone(data))`
 
-## Create
+| Test Name        | Heap Used  | Elapsed Time    |
+|------------------|------------|-----------------|
+| mediary-create   | 2.38 MB    | 11.293118 MS    |
+| stringify-create | 142.86 MB  | 2269.986464 MS  |
+| deepclone-create | 231.95 MB  | 2438.768097 MS  |
+| realize-create   | 472.5 MB   | 11808.397295 MS |
 
-|           |   mediary | JSON.stringify/parse | recursive reduce |
-|-----------|-----------|----------------------|------------------|
-| time      |     18 MS |              3243 MS |          3480 MS |
-| rss       |    5.2 MB |             165.9 MB |         301.5 MB |
-| heapUsed  |    2.2 MB |             139.0 MB |         194.5 MB |
+Object creation is where mediary outperforms everything else in terms of time and space complexity.
+
+# Property Get
+
+This test reads every leaf on the large test object 1000 times.
+
+| Test Name        | Heap Used  | Elapsed Time    |
+|------------------|------------|-----------------|
+| native-read      | 1.09 MB    | 8.120928 MS     |
+| mediary-read     | 2.68 MB    | 2822.117506 MS  |
+
+There is obviously a significant trade off in time complexity with propery access using mediary.
+
+Mediary also has slightly higher space complexity, though not significant.
+
+Performance degradation here is due to the proxied representations which are created at the time of accessing any given property. This is where Mediary does the most work.
+
+This performance is not where I want it to be and is being working on.
+
+# Property Set
+
+This test set a new value to every leaf on the large test object 1000 times.
+
+| Test Name        | Heap Used  | Elapsed Time    |
+|------------------|------------|-----------------|
+| mediary-write    | 11.12 MB   | 5084.252828 MS  |
+| realize-write    | 14.9 MB    | 1518.473718 MS  |
+| native-write     | 16.82 MB   | 1431.833238 MS  |
+
+Here, mediary wins on space complexity but takes a hit on time complexity. That said, the minor slow down should be an acceptable trade off for most applications.
 
 # License
 

@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+const { mediary, realize } = require('..');
+const runner = require('./runner');
+const data = require('./data');
+
+const leak = [];
+
+runner('realize-create', 1000, x => {
+    leak.push(realize(mediary(data)));
+});

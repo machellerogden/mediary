@@ -109,6 +109,19 @@ arrayProto.indexOf = function (v) {
     return -1;
 };
 
+arrayProto.lastIndexOf = function (v) {
+    var i = this.length;
+    var { patch, target, additions, deletions } = this[SymMeta];
+    while (--i >= 0) {
+        if (additions.has(String(i)) || deletions.has(String(i))) {
+            if (Object.is(patch[i], v)) return i;
+        } else {
+            if (Object.is(target[i], v)) return i;
+        }
+    }
+    return -1;
+};
+
 arrayProto.filter = function (fn, r) {
     r = r || this;
     var i = 0;
@@ -128,6 +141,18 @@ arrayProto.every = function (fn, r) {
     var acc = true;
     while (i < length) {
         acc = acc && fn(r[i], i, r);
+        i++;
+    }
+    return acc;
+};
+
+arrayProto.some = function (fn, r) {
+    r = r || this;
+    var i = 0;
+    var length = r.length;
+    var acc = false;
+    while (i < length) {
+        acc = acc || fn(r[i], i, r);
         i++;
     }
     return acc;
@@ -199,6 +224,21 @@ arrayProto.flat = function (depth = 1) {
         i++;
     }
     return acc;
+};
+
+arrayProto.slice = function (start, end) {
+    return [ ...this ].slice(start, end);
+};
+
+arrayProto.sort = function (fn) {
+    var length = this.length;
+    var sorted = [ ...this ].sort(fn);
+    var i = 0;
+    while (i < length) {
+        this[i] = sorted[i];
+        i++;
+    }
+    return this;
 };
 
 module.exports = arrayProto;
