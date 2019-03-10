@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+const { create } = require('../../..');
+let data = {
+    ids: [],
+    map: {}
+}
+
+data = create(data, cloned => {
+    let i = 0;
+    while (global.times > i) {
+        cloned.ids.push(i);
+        cloned.map[i] = {
+            a: 1,
+            b: 'Some data here'
+        };
+        i++;
+    }
+});
