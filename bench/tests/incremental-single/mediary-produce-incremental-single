@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-const { produce } = require('..');
-const runner = require('./runner');
+const { produce } = require('../../..');
 let data = {
     ids: [],
     map: {}

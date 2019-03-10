@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
-const runner = require('./runner');
-const data = require('./data');
-const { deepFreeze } = require('../util');
+const data = require('../../data');
+const { deepFreeze } = require('../../../util');
 deepFreeze(data);
 
 const leak = [];

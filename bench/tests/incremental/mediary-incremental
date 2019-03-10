@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 
-const { produce } = require('immer');
-const runner = require('./runner');
+const { mediary } = require('../../..');
 let data = {
     ids: [],
     map: {}
 }
-data = produce(data, draft => {
+
 let i = 0;
 while (global.times > i) {
-    draft.ids.push(i);
-    draft.map[i] = {
+    let cloned = mediary(data);
+    cloned.ids.push(i);
+    cloned.map[i] = {
         a: 1,
         b: 'Some data here'
     };
+    data = cloned;
     i++;
-});
+}

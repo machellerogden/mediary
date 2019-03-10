@@ -16,8 +16,8 @@ const {
 function mediary(given) {
     if (given == null || typeof given !== 'object' || given[Sym]) return given;
 
-    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, Array))) {
-        throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object` or `Array`)');
+    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, Array) || Object.is(given.constructor, void 0))) {
+        throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object`, `Array` or `undefined`)');
     }
 
     deepFreeze(given);
@@ -173,19 +173,33 @@ function realize(given) {
 }
 
 exports.clone = given => mediary(realize(given));
-// immer compat
+exports.realize = realize;
+exports.mediary = mediary;
+exports.Sym = Sym;
+exports.SymMeta = SymMeta;
+
+
+// Below are some functions which support immer's `produce` pattern.
+
+// `produce` is a drop-in replacement for immer `produce`. returns plain old
+// javascript object, just like immer. Warning: Performance of `produce` is
+// poor. This is an antipattern in mediary. This function is here to provide
+// a possible migration path. If you need something similar but want good
+// performance please consider using the `create` function below instead.
 exports.produce = (given, fn) => {
     const cloned = mediary(given);
     fn(cloned);
     return realize(cloned);
 };
-// immer compat - no realize
+
+// `create` returns a mediary object. With mediary there is usually no need to
+// ever "realize" the object. If you really want to use immer's `produce`
+// pattern and you want good performance use the `create` method. But if you
+// are thinking about using this, ask yourself "why am I using immer's pattern
+// when I now have a transparent virtualization?". Again, this is here to
+// provide a migration path.
 exports.create = (given, fn) => {
     const cloned = mediary(given);
     fn(cloned);
     return cloned;
 };
-exports.realize = realize;
-exports.mediary = mediary;
-exports.Sym = Sym;
-exports.SymMeta = SymMeta;

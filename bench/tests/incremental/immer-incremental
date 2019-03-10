@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+
+const { produce } = require('immer');
+let data = {
+    ids: [],
+    map: {}
+}
+
+let i = 0;
+while (global.times > i) {
+    data = produce(data, draft => {
+        draft.ids.push(i);
+        draft.map[i] = {
+            a: 1,
+            b: 'Some data here'
+        };
+    });
+    i++;
+}
+
+// console.log('immer data', data);

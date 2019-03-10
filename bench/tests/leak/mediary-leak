@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
-const { mediary } = require('..');
-const runner = require('./runner');
-const data = require('./data');
+const { mediary } = require('../../..');
+const data = require('../../data');
 
 const leak = [];
 

@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-const { mediary } = require('..');
-const runner = require('./runner');
+const { mediary } = require('../../..');
 let data = {
     ids: [],
     map: {}
 }
 
+let cloned = mediary(data);
 let i = 0;
 while (global.times > i) {
-    let cloned = mediary(data);
     cloned.ids.push(i);
     cloned.map[i] = {
         a: 1,
         b: 'Some data here'
     };
-    data = cloned;
+    return cloned;
     i++;
 }
+data = cloned;
