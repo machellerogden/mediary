@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+
+const { produce } = require('..');
+const runner = require('./runner');
+let data = {
+    ids: [],
+    map: {}
+}
+
+data = produce(data, cloned => {
+    let i = 0;
+    while (global.times > i) {
+        cloned.ids.push(i);
+        cloned.map[i] = {
+            a: 1,
+            b: 'Some data here'
+        };
+        i++;
+    }
+});

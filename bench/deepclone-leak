@@ -20,6 +20,8 @@ function deepClone(o) {
 
 const leak = [];
 
-runner('deepclone-create', 1000, x => {
+let i = 0;
+while (global.times > i) {
     leak.push(deepClone(data));
-});
+    i++;
+}

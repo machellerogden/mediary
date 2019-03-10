@@ -5,7 +5,8 @@ const runner = require('./runner');
 const data = require('./data');
 const cloned = mediary(data);
 
-runner('mediary-write', 1000, x => {
+let i = 0;
+while (global.times > i) {
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         cloned[k].forEach(v => {
             v._id = 123;
@@ -59,4 +60,5 @@ runner('mediary-write', 1000, x => {
     cloned.x = 'x';
     cloned.y = 'y';
     cloned.z = 'z';
-});
+    i++;
+}

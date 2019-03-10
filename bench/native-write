@@ -3,7 +3,8 @@
 const runner = require('./runner');
 const data = require('./data');
 
-runner('native-write', 1000, x => {
+let i = 0;
+while (global.times > i) {
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         data[k].forEach(v => {
             v._id = 123;
@@ -57,4 +58,5 @@ runner('native-write', 1000, x => {
     data.x = 'x';
     data.y = 'y';
     data.z = 'z';
-});
+    i++;
+}

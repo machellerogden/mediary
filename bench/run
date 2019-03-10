@@ -1,11 +1,27 @@
-#!/usr/bin/env bash
+#!/usr/bin/env node
 
-./bench/mediary-create
-./bench/stringify-create
-./bench/deepclone-create
-./bench/mediary-read
-./bench/mediary-write
-./bench/realize-create
-./bench/realize-write
-./bench/native-read
-./bench/native-write
+const table = require('markdown-table')
+const path = require('path');
+const { spawnSync:spawn } = require('child_process');
+const run = tests => console.log(table([ [ 'Test Name', 'Heap Used', 'Elapsed Time' ], ...tests.map(name => JSON.parse(spawn('node', [ '-r', path.join(__dirname, './runner'), path.join(__dirname, name), name, ...process.argv.slice(2) ]).stdout.toString())) ], { align: [ null, '.', '.' ] }));
+
+run([
+  'immer-incremental',
+  'mediary-incremental',
+  'immer-incremental-single',
+  'mediary-incremental-single',
+  'mediary-leak',
+  'immer-leak',
+  'stringify-leak',
+  'deepclone-leak',
+  'realize-leak',
+  'native-read',
+  'realize-read',
+  'immer-read',
+  'mediary-read',
+  'mediary-write',
+  'immer-write',
+  'realize-write',
+  'native-write'
+]);
+

@@ -172,10 +172,20 @@ function realize(given) {
     });
 }
 
-const clone = given => mediary(realize(given));
-
+exports.clone = given => mediary(realize(given));
+// immer compat
+exports.produce = (given, fn) => {
+    const cloned = mediary(given);
+    fn(cloned);
+    return realize(cloned);
+};
+// immer compat - no realize
+exports.create = (given, fn) => {
+    const cloned = mediary(given);
+    fn(cloned);
+    return cloned;
+};
 exports.realize = realize;
 exports.mediary = mediary;
-exports.clone = clone;
 exports.Sym = Sym;
 exports.SymMeta = SymMeta;

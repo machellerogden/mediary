@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+const { produce } = require('immer');
+const runner = require('./runner');
+const data = require('./data');
+
+const leak = [];
+
+let i = 0;
+while (global.times > i) {
+    leak.push(produce(data, () => {}));
+    i++;
+}

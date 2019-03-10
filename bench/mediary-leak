@@ -6,6 +6,8 @@ const data = require('./data');
 
 const leak = [];
 
-runner('mediary-create', 1000, x => {
+let i = 0;
+while (global.times > i) {
     leak.push(mediary(data));
-});
+    i++;
+}

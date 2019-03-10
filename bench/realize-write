@@ -3,9 +3,10 @@
 const { mediary, realize } = require('..');
 const runner = require('./runner');
 const data = require('./data');
-const cloned = realize(mediary(data));
 
-runner('realize-write', 1000, x => {
+let i = 0;
+while (global.times > i) {
+    const cloned = realize(mediary(data));
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         cloned[k].forEach(v => {
             v._id = 123;
@@ -59,4 +60,5 @@ runner('realize-write', 1000, x => {
     cloned.x = 'x';
     cloned.y = 'y';
     cloned.z = 'z';
-});
+    i++;
+}
