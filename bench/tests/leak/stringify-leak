@@ -7,7 +7,7 @@ deepFreeze(data);
 const leak = [];
 
 let i = 0;
-while (global.times > i) {
+while (process.env.HBU_TIMES > i) {
     leak.push(JSON.parse(JSON.stringify(data)));
     i++;
 }

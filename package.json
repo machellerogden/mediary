@@ -4,7 +4,8 @@
   "description": "An object immutability helper",
   "main": "index.js",
   "scripts": {
-    "test": "ava index.spec.js"
+    "test": "ava index.spec.js",
+    "benchmark": "hbu './bench/tests/**/*' --times 1000"
   },
   "keywords": [
     "immutable",

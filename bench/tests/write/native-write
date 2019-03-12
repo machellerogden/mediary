@@ -3,7 +3,7 @@
 const data = require('../../data');
 
 let i = 0;
-while (global.times > i) {
+while (process.env.HBU_TIMES > i) {
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         data[k].forEach(v => {
             v._id = 123;

@@ -7,7 +7,7 @@ let data = {
 }
 data = produce(data, draft => {
     let i = 0;
-    while (global.times > i) {
+    while (process.env.HBU_TIMES > i) {
         draft.ids.push(i);
         draft.map[i] = {
             a: 1,

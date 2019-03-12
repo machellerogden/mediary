@@ -20,7 +20,7 @@ function deepClone(o) {
 const leak = [];
 
 let i = 0;
-while (global.times > i) {
+while (process.env.HBU_TIMES > i) {
     leak.push(deepClone(data));
     i++;
 }

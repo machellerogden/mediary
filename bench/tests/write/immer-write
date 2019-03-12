@@ -4,7 +4,7 @@ const { produce } = require('immer');
 const data = require('../../data');
 
 let i = 0;
-while (global.times > i) {
+while (process.env.HBU_TIMES > i) {
     produce(data, draft => {
         [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
             draft[k].forEach(v => {

@@ -90,6 +90,8 @@ Using a large single object (377 KB) and 1000 iterations for each test.
 
 _Tested on 2.6 GHz Intel Core i7 with 16 GB 2400 MHz DDR4 using Node v11.11.0_
 
+Run them for yourself with: `npm run benchmark`
+
 # Incremental Changes
 
 This test simulates the real-world use case of adding small changes over time to a given object. 1000 such changes are made, each to a freshly cloned object.
@@ -171,3 +173,30 @@ Here, mediary wins on space complexity but takes a hit on time complexity. That 
 # License
 
 MIT
+
+
+# Updated Benchmarks
+
+| Test Label                            | Heap Used (MB)  | Duration (MS)     | GC Events | GC Collected Heap (MB) | GC Pause Duration (MS) |
+| ------------------------------------- | :-------------: | :---------------: | --------- | :--------------------: | ---------------------- |
+| immer-incremental-single              |         0.15    |        26.800015  | 1         |             -1.14      | 1                      |
+| mediary-create-incremental-single     |         3.17    |       267.243636  | 57        |            166.57      | 59                     |
+| mediary-no-wrapper-incremental-single |         0.18    |         5.388965  | 0         |              0         | 0                      |
+| mediary-produce-incremental-single    |         1.71    |       256.692791  | 57        |            168.36      | 55                     |
+| immer-incremental                     |         5.85    |       845.457483  | 52        |            190.47      | 76                     |
+| mediary-create-incremental            |         3.17    |       257.740382  | 56        |            166.66      | 61                     |
+| mediary-no-wrapper-incremental        |         2.18    |       259.966598  | 57        |            167.55      | 24                     |
+| mediary-produce-incremental           |        11.61    |      7539.247486  | 269       |           3329.73      | 256                    |
+| deepclone-leak                        |       208.19    |      4947.248631  | 83        |            838.25      | 321                    |
+| immer-leak                            |         0.66    |        61.136418  | 1         |             -1.08      | 10                     |
+| mediary-leak                          |         1.67    |        48.720062  | 3         |              0.6       | 22                     |
+| realize-leak                          |       458.39    |     14638.431263  | 642       |           8153.37      | 1249                   |
+| stringify-leak                        |       139.19    |      4623.96392   | 57        |            493.45      | 75                     |
+| immer-read                            |         0.27    |        28.997442  | 2         |              0.31      | 1                      |
+| mediary-read                          |        16.34    |     11616.488382  | 408       |           5644.49      | 664                    |
+| native-read                           |         0.56    |        32.776422  | 1         |             -1.04      | 0                      |
+| realize-read                          |        26.68    |     17064.178454  | 837       |           8586.01      | 2409                   |
+| immer-write                           |         7.09    |      9671.237337  | 204       |           2808.37      | 122                    |
+| mediary-write                         |        10.3     |      8882.896355  | 479       |           5720.75      | 304                    |
+| native-write                          |        10.09    |      2909.075585  | 472       |           5646.94      | 500                    |
+| realize-write                         |        16.23    |     16680.4807    | 836       |           8687.03      | 2388                   |

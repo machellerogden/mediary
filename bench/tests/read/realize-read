@@ -4,7 +4,7 @@ const { realize, mediary } = require('../../..');
 const data = require('../../data');
 
 let i = 0;
-while (global.times > i) {
+while (process.env.HBU_TIMES > i) {
     const cloned = realize(mediary(data));
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         cloned[k].forEach(v => {

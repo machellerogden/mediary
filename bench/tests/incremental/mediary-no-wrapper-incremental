@@ -7,7 +7,7 @@ let data = {
 }
 
 let i = 0;
-while (global.times > i) {
+while (process.env.HBU_TIMES > i) {
     let cloned = mediary(data);
     cloned.ids.push(i);
     cloned.map[i] = {
