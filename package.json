@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "ava index.spec.js",
-    "benchmark": "hbu './bench/tests/**/*' --times 1000"
+    "benchmark": "hbu './bench/tests/**/*' --times 1000 --gc-stats"
   },
   "keywords": [
     "immutable",
@@ -23,6 +23,7 @@
   "license": "MIT",
   "devDependencies": {
     "ava": "^1.2.1",
+    "hbu": "0.0.14",
     "immer": "^2.1.1",
     "markdown-table": "^1.1.2"
   },

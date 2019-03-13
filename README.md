@@ -84,7 +84,7 @@ console.log(bar); // => { a: { b: 'b', c: 'c', d: 'd'  } }
 
 # Benchmarks
 
-See [./bench](https://github.com/machellerogden/mediary/tree/master/bench) directory for test setup.
+See [./bench](https://github.com/machellerogden/mediary/tree/master/bench) directory for test setup. Test run is handled by [hbu](https://www.npmjs.com/package/hbu).
 
 Using a large single object (377 KB) and 1000 iterations for each test.
 
@@ -96,23 +96,23 @@ Run them for yourself with: `npm run benchmark`
 
 This test simulates the real-world use case of adding small changes over time to a given object. 1000 such changes are made, each to a freshly cloned object.
 
-| Label                          | Heap Used          | Elapsed Time             |
-| ------------------------------ | :----------------: | :----------------------: |
-| mediary-no-wrapper-incremental |         1.5 MB     |           91.942994 MS   |
-| mediary-create-incremental     |         1.5 MB     |           86.324569 MS   |
-| immer-incremental              |         7.34 MB    |          349.310175 MS   |
-| mediary-produce-incremental    |        12.37 MB    |         3861.95169 MS    |
+| Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| mediary-create-incremental            |           2.45 |     232.24389 |                 166.74 |               33.00197 |                 0 |                60 |
+| mediary-no-wrapper-incremental        |           0.71 |     232.94262 |                 168.60 |               21.83293 |                 0 |                60 |
+| immer-incremental                     |           5.29 |     803.68613 |                 190.70 |               42.62420 |                 0 |                54 |
+| mediary-produce-incremental           |           6.14 |    7108.61646 |                3334.10 |              264.66534 |                 0 |               274 |
 
 # Incremental Changes (in a single pass)
 
 This test simulates the real-world use case of adding lots of small changes to a given object in a single pass. 1000 such changes are made to a single cloned object.
 
-| Label                                 | Heap Used          | Elapsed Time             |
-| ------------------------------------- | :----------------: | :----------------------: |
-| mediary-no-wrapper-incremental-single |         0.59 MB    |            3.026253 MS   |
-| immer-incremental-single              |         1.04 MB    |           10.417299 MS   |
-| mediary-create-incremental-single     |         1.34 MB    |           88.415071 MS   |
-| mediary-produce-incremental-single    |         1.97 MB    |           88.803305 MS   |
+| Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| mediary-no-wrapper-incremental-single |           0.15 |       4.17549 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-incremental-single              |           1.50 |      34.43458 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-create-incremental-single     |           1.52 |     247.02509 |                 166.49 |               62.53377 |                 0 |                59 |
+| mediary-produce-incremental-single    |           2.47 |     247.42729 |                 167.26 |               31.13656 |                 0 |                59 |
 
 # Object Creation
 
@@ -126,14 +126,13 @@ Four clone implementations are tested:
    * `JSON.parse(JSON.stringify(data))`
    * `mediary.realize(mediary.clone(data))`
 
-
-| Label          | Heap Used          | Elapsed Time             |
-| -------------- | :----------------: | :----------------------: |
-| immer-leak     |         1.5 MB     |            8.272445 MS   |
-| mediary-leak   |         3.27 MB    |           16.393244 MS   |
-| deepclone-leak |       242.95 MB    |         2344.658957 MS   |
-| stringify-leak |       142.34 MB    |         2246.91812 MS    |
-| realize-leak   |       718.29 MB    |        12061.998137 MS   |
+| Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| immer-leak                            |           0.64 |      61.95657 |                  -1.42 |               12.15577 |                 0 |                 1 |
+| mediary-leak                          |           2.27 |      73.69587 |                  -0.22 |               14.36987 |                 0 |                 3 |
+| stringify-leak                        |         141.79 |    4225.32432 |                 490.14 |               78.94483 |                 3 |                48 |
+| deepclone-leak                        |           0.36 |    4702.56784 |                1045.27 |              290.69014 |                 7 |                67 |
+| realize-leak                          |         465.69 |   13756.62862 |                8145.57 |             1155.52394 |                 5 |               630 |
 
 
 Immer fars the best but mediary is a close second with around twice the space and time complexity.
@@ -142,12 +141,12 @@ Immer fars the best but mediary is a close second with around twice the space an
 
 This test reads every leaf on the large test object 1000 times.
 
-| Label        | Heap Used          | Elapsed Time             |
-| ------------ | :----------------: | :----------------------: |
-| native-read  |         1.52 MB    |           11.419873 MS   |
-| immer-read   |         1.12 MB    |           18.724774 MS   |
-| mediary-read |        14.02 MB    |         6865.220457 MS   |
-| realize-read |         0.45 MB    |        11674.012832 MS   |
+| Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| native-read                           |           1.48 |      31.37225 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-read                            |           1.55 |      34.87931 |                  -1.43 |                1.26944 |                 0 |                 1 |
+| mediary-read                          |           1.91 |   10464.81967 |                5658.87 |              544.56020 |                 1 |               407 |
+| realize-read                          |          18.21 |   13582.51448 |                8593.94 |              925.27228 |                17 |               630 |
 
 There is obviously a significant trade off in time complexity with propery access using mediary.
 
@@ -161,42 +160,15 @@ This performance is not where I want it to be and is being working on.
 
 This test set a new value to every leaf on the large test object 1000 times.
 
-| Label         | Heap Used          | Elapsed Time             |
-| ------------- | :----------------: | :----------------------: |
-| native-write  |        20.57 MB    |         1373.10171 MS    |
-| mediary-write |         8.13 MB    |         4846.20946 MS    |
-| immer-write   |         9.38 MB    |         5159.069721 MS   |
-| realize-write |         0.45 MB    |        11709.913678 MS   |
+| Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| native-write                          |           6.25 |    2664.25531 |                5650.11 |              511.36048 |                 1 |               469 |
+| immer-write                           |           9.88 |    8873.15651 |                2805.30 |              137.01767 |                 0 |               203 |
+| mediary-write                         |           2.56 |    8163.23233 |                5728.72 |              414.54735 |                 1 |               476 |
+| realize-write                         |           3.02 |   13188.34618 |                8695.57 |              845.90822 |                 5 |               643 |
 
 Here, mediary wins on space complexity but takes a hit on time complexity. That said, the minor slow down should be an acceptable trade off for most applications.
 
 # License
 
 MIT
-
-
-# Updated Benchmarks
-
-| Test Label                            | Heap Used (MB)  | Duration (MS)     | GC Events | GC Collected Heap (MB) | GC Pause Duration (MS) |
-| ------------------------------------- | :-------------: | :---------------: | --------- | :--------------------: | ---------------------- |
-| immer-incremental-single              |         0.15    |        26.800015  | 1         |             -1.14      | 1                      |
-| mediary-create-incremental-single     |         3.17    |       267.243636  | 57        |            166.57      | 59                     |
-| mediary-no-wrapper-incremental-single |         0.18    |         5.388965  | 0         |              0         | 0                      |
-| mediary-produce-incremental-single    |         1.71    |       256.692791  | 57        |            168.36      | 55                     |
-| immer-incremental                     |         5.85    |       845.457483  | 52        |            190.47      | 76                     |
-| mediary-create-incremental            |         3.17    |       257.740382  | 56        |            166.66      | 61                     |
-| mediary-no-wrapper-incremental        |         2.18    |       259.966598  | 57        |            167.55      | 24                     |
-| mediary-produce-incremental           |        11.61    |      7539.247486  | 269       |           3329.73      | 256                    |
-| deepclone-leak                        |       208.19    |      4947.248631  | 83        |            838.25      | 321                    |
-| immer-leak                            |         0.66    |        61.136418  | 1         |             -1.08      | 10                     |
-| mediary-leak                          |         1.67    |        48.720062  | 3         |              0.6       | 22                     |
-| realize-leak                          |       458.39    |     14638.431263  | 642       |           8153.37      | 1249                   |
-| stringify-leak                        |       139.19    |      4623.96392   | 57        |            493.45      | 75                     |
-| immer-read                            |         0.27    |        28.997442  | 2         |              0.31      | 1                      |
-| mediary-read                          |        16.34    |     11616.488382  | 408       |           5644.49      | 664                    |
-| native-read                           |         0.56    |        32.776422  | 1         |             -1.04      | 0                      |
-| realize-read                          |        26.68    |     17064.178454  | 837       |           8586.01      | 2409                   |
-| immer-write                           |         7.09    |      9671.237337  | 204       |           2808.37      | 122                    |
-| mediary-write                         |        10.3     |      8882.896355  | 479       |           5720.75      | 304                    |
-| native-write                          |        10.09    |      2909.075585  | 472       |           5646.94      | 500                    |
-| realize-write                         |        16.23    |     16680.4807    | 836       |           8687.03      | 2388                   |
