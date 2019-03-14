@@ -1,14 +1,20 @@
-#!/usr/bin/env node
+'use strict';
 
-const { produce } = require('../../..');
+const { start, end, times } = require('hbu');
+
+const { create } = require('../../..');
+
 let data = {
     ids: [],
     map: {}
-}
+};
 
 let i = 0;
-while (process.env.HBU_TIMES > i) {
-    data = produce(data, cloned => {
+
+start();
+
+while (i < times) {
+    data = create(data, cloned => {
         cloned.ids.push(i);
         cloned.map[i] = {
             a: 1,
@@ -17,3 +23,5 @@ while (process.env.HBU_TIMES > i) {
     });
     i++;
 }
+
+end();

@@ -1,10 +1,15 @@
-#!/usr/bin/env node
+'use strict';
+
+const { start, end, times } = require('hbu');
 
 const { produce } = require('immer');
 const data = require('../../data');
 
 let i = 0;
-while (process.env.HBU_TIMES > i) {
+
+start();
+
+while (i < times) {
     produce(data, draft => {
         [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
             draft[k].forEach(v => {
@@ -62,3 +67,5 @@ while (process.env.HBU_TIMES > i) {
     });
     i++;
 }
+
+end();

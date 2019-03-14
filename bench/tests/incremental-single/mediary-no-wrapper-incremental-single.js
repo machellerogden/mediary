@@ -1,19 +1,28 @@
-#!/usr/bin/env node
+'use strict';
+
+const { start, end, times } = require('hbu');
 
 const { mediary } = require('../../..');
+
 let data = {
     ids: [],
     map: {}
-}
+};
 
+let cloned = mediary(data);
 let i = 0;
-while (process.env.HBU_TIMES > i) {
-    let cloned = mediary(data);
+
+start();
+
+while (i < times) {
     cloned.ids.push(i);
     cloned.map[i] = {
         a: 1,
         b: 'Some data here'
     };
-    data = cloned;
+    return cloned;
     i++;
 }
+data = cloned;
+
+end();

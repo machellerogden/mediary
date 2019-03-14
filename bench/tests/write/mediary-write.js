@@ -1,11 +1,18 @@
-#!/usr/bin/env node
+'use strict';
 
+const { start, end, times } = require('hbu');
+
+const { mediary } = require('../../..');
 const data = require('../../data');
+const cloned = mediary(data);
 
 let i = 0;
-while (process.env.HBU_TIMES > i) {
+
+start();
+
+while (i < times) {
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
-        data[k].forEach(v => {
+        cloned[k].forEach(v => {
             v._id = 123;
             v.index = 123;
             v.guid = 'cf9c9748-672d-4661-8c5c-2ef6c4e69679';
@@ -38,24 +45,26 @@ while (process.env.HBU_TIMES > i) {
             v.favoriteFruit = 'papaya';
         });
     });
-    data.h = 'h';
-    data.i = 'i';
-    data.j = 'j';
-    data.k = 'k';
-    data.l = 'l';
-    data.m = 'm';
-    data.n = 'n';
-    data.o = 'o';
-    data.p = 'p';
-    data.q = 'q';
-    data.r = 'r';
-    data.s = 's';
-    data.t = 't';
-    data.u = 'u';
-    data.v = 'v';
-    data.w = 'w';
-    data.x = 'x';
-    data.y = 'y';
-    data.z = 'z';
+    cloned.h = 'h';
+    cloned.i = 'i';
+    cloned.j = 'j';
+    cloned.k = 'k';
+    cloned.l = 'l';
+    cloned.m = 'm';
+    cloned.n = 'n';
+    cloned.o = 'o';
+    cloned.p = 'p';
+    cloned.q = 'q';
+    cloned.r = 'r';
+    cloned.s = 's';
+    cloned.t = 't';
+    cloned.u = 'u';
+    cloned.v = 'v';
+    cloned.w = 'w';
+    cloned.x = 'x';
+    cloned.y = 'y';
+    cloned.z = 'z';
     i++;
 }
+
+end();

@@ -1,7 +1,10 @@
-#!/usr/bin/env node
+'use strict';
+
+const { start, end, times } = require('hbu');
 
 const data = require('../../data');
 const { deepFreeze } = require('../../../util');
+
 deepFreeze(data);
 
 function deepClone(o) {
@@ -20,7 +23,12 @@ function deepClone(o) {
 const leak = [];
 
 let i = 0;
-while (process.env.HBU_TIMES > i) {
+
+start();
+
+while (i < times) {
     leak.push(deepClone(data));
     i++;
 }
+
+end();

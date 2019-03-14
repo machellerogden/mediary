@@ -1,11 +1,18 @@
-#!/usr/bin/env node
+'use strict';
 
+const { start, end, times } = require('hbu');
+
+const { realize, mediary } = require('../../..');
 const data = require('../../data');
 
 let i = 0;
-while (process.env.HBU_TIMES > i) {
+
+start();
+
+while (i < times) {
+    const cloned = realize(mediary(data));
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
-        data[k].forEach(v => {
+        cloned[k].forEach(v => {
             v._id;
             v.index;
             v.guid;
@@ -35,24 +42,26 @@ while (process.env.HBU_TIMES > i) {
             v.favoriteFruit;
         });
     });
-    data.h;
-    data.i;
-    data.j;
-    data.k;
-    data.l;
-    data.m;
-    data.n;
-    data.o;
-    data.p;
-    data.q;
-    data.r;
-    data.s;
-    data.t;
-    data.u;
-    data.v;
-    data.w;
-    data.x;
-    data.y;
-    data.z;
+    cloned.h;
+    cloned.i;
+    cloned.j;
+    cloned.k;
+    cloned.l;
+    cloned.m;
+    cloned.n;
+    cloned.o;
+    cloned.p;
+    cloned.q;
+    cloned.r;
+    cloned.s;
+    cloned.t;
+    cloned.u;
+    cloned.v;
+    cloned.w;
+    cloned.x;
+    cloned.y;
+    cloned.z;
     i++;
 }
+
+end();

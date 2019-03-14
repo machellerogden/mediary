@@ -1,13 +1,19 @@
-#!/usr/bin/env node
+'use strict';
+
+const { start, end, times } = require('hbu');
 
 const { produce } = require('immer');
+
 let data = {
     ids: [],
     map: {}
 }
+
+start();
+
 data = produce(data, draft => {
     let i = 0;
-    while (process.env.HBU_TIMES > i) {
+    while (i < times) {
         draft.ids.push(i);
         draft.map[i] = {
             a: 1,
@@ -16,3 +22,5 @@ data = produce(data, draft => {
         i++;
     }
 });
+
+end();

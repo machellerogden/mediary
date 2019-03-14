@@ -1,11 +1,16 @@
-#!/usr/bin/env node
+'use strict';
 
-const { mediary } = require('../../..');
+const { start, end, times } = require('hbu');
+
+const { mediary, realize } = require('../../..');
 const data = require('../../data');
-const cloned = mediary(data);
 
 let i = 0;
-while (process.env.HBU_TIMES > i) {
+
+start();
+
+while (i < times) {
+    const cloned = realize(mediary(data));
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         cloned[k].forEach(v => {
             v._id = 123;
@@ -61,3 +66,5 @@ while (process.env.HBU_TIMES > i) {
     cloned.z = 'z';
     i++;
 }
+
+end();

@@ -1,4 +1,6 @@
-#!/usr/bin/env node
+'use strict';
+
+const { start, end, times } = require('hbu');
 
 const data = require('../../data');
 const { deepFreeze } = require('../../../util');
@@ -7,7 +9,12 @@ deepFreeze(data);
 const leak = [];
 
 let i = 0;
-while (process.env.HBU_TIMES > i) {
+
+start();
+
+while (i < times) {
     leak.push(JSON.parse(JSON.stringify(data)));
     i++;
 }
+
+end();
