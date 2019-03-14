@@ -19,7 +19,7 @@ while (i < times) {
             v.picture = 'cat.gif';
             v.age = 4;
             v.eyeColor = 'blue';
-            v.name = 'Jane Doe';
+            v.name = {};
             v.name.first = 'Jane';
             v.name.last = 'Doe';
             v.company = 'NA';

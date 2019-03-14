@@ -98,10 +98,12 @@ This test simulates the real-world use case of adding small changes over time to
 
 | Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| mediary-create-incremental            |           2.45 |     232.24389 |                 166.74 |               33.00197 |                 0 |                60 |
-| mediary-no-wrapper-incremental        |           0.71 |     232.94262 |                 168.60 |               21.83293 |                 0 |                60 |
-| immer-incremental                     |           5.29 |     803.68613 |                 190.70 |               42.62420 |                 0 |                54 |
-| mediary-produce-incremental           |           6.14 |    7108.61646 |                3334.10 |              264.66534 |                 0 |               274 |
+| mediary-no-wrapper-incremental        |           0.62 |      81.27193 |                 167.67 |                4.87489 |                 0 |                62 |
+| mediary-create-incremental            |           0.92 |      84.78776 |                 167.53 |                4.97121 |                 0 |                60 |
+| immer-incremental                     |           7.74 |     350.02811 |                 194.49 |                7.84946 |                 0 |                55 |
+| mediary-produce-incremental           |          11.50 |    3852.61011 |                3327.12 |              102.89240 |                 0 |               267 |
+
+Mediary produce "realizes" the mediary object. This is an extremely expensive operation as shown in the benchmark results.
 
 # Incremental Changes (in a single pass)
 
@@ -109,10 +111,10 @@ This test simulates the real-world use case of adding lots of small changes to a
 
 | Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| mediary-no-wrapper-incremental-single |           0.15 |       4.17549 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-incremental-single              |           1.50 |      34.43458 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-create-incremental-single     |           1.52 |     247.02509 |                 166.49 |               62.53377 |                 0 |                59 |
-| mediary-produce-incremental-single    |           2.47 |     247.42729 |                 167.26 |               31.13656 |                 0 |                59 |
+| immer-incremental-single              |           1.31 |       5.38932 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-no-wrapper-incremental-single |           1.10 |      81.52746 |                 167.32 |                4.81829 |                 0 |                59 |
+| mediary-create-incremental-single     |           1.11 |      81.74502 |                 167.32 |                4.47623 |                 0 |                59 |
+| mediary-produce-incremental-single    |           1.93 |      86.06582 |                 167.40 |                4.75661 |                 0 |                59 |
 
 # Object Creation
 
@@ -128,14 +130,13 @@ Four clone implementations are tested:
 
 | Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| immer-leak                            |           0.64 |      61.95657 |                  -1.42 |               12.15577 |                 0 |                 1 |
-| mediary-leak                          |           2.27 |      73.69587 |                  -0.22 |               14.36987 |                 0 |                 3 |
-| stringify-leak                        |         141.79 |    4225.32432 |                 490.14 |               78.94483 |                 3 |                48 |
-| deepclone-leak                        |           0.36 |    4702.56784 |                1045.27 |              290.69014 |                 7 |                67 |
-| realize-leak                          |         465.69 |   13756.62862 |                8145.57 |             1155.52394 |                 5 |               630 |
+| immer-leak                            |           0.98 |       2.16409 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-leak                          |           2.27 |       9.53191 |                  -0.57 |                1.07082 |                 0 |                 2 |
+| stringify-leak                        |         145.80 |    1860.90812 |                 439.50 |               34.03300 |                 3 |                45 |
+| deepclone-leak                        |         195.94 |    2080.24129 |                 797.28 |              127.44061 |                 6 |                65 |
+| realize-leak                          |         710.43 |   15042.31074 |                7896.69 |             2627.72859 |                23 |               725 |
 
-
-Immer fars the best but mediary is a close second with around twice the space and time complexity.
+The moral of the story: don't realize a mediary object unless you have to. And you shouldn't ever have to.
 
 # Property Get
 
@@ -143,18 +144,16 @@ This test reads every leaf on the large test object 1000 times.
 
 | Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| native-read                           |           1.48 |      31.37225 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-read                            |           1.55 |      34.87931 |                  -1.43 |                1.26944 |                 0 |                 1 |
-| mediary-read                          |           1.91 |   10464.81967 |                5658.87 |              544.56020 |                 1 |               407 |
-| realize-read                          |          18.21 |   13582.51448 |                8593.94 |              925.27228 |                17 |               630 |
+| native-read                           |           1.04 |       6.75869 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-read                            |           0.21 |       9.78915 |                  -1.79 |                0.26626 |                 0 |                 1 |
+| mediary-read                          |           8.96 |    6812.03345 |                5658.29 |              255.90069 |                 1 |               406 |
+| realize-read                          |          22.78 |   12049.86087 |                8585.32 |             1560.97019 |                87 |               659 |
 
-There is obviously a significant trade off in time complexity with propery access using mediary.
+There is obviously a significant trade off in time complexity with propery access using mediary and it obviously puts tremendous pressure on the garbage collector.
 
-Mediary also has slightly higher space complexity, though not significant.
+Performance degradation here is due to the proxied representations which are created at the time of accessing any given property. This is where Mediary does the most work in trying to remain transparent to the user.
 
-Performance degradation here is due to the proxied representations which are created at the time of accessing any given property. This is where Mediary does the most work.
-
-This performance is not where I want it to be and is being working on.
+This performance is not where it needs to be and is being working on.
 
 # Property Set
 
@@ -162,12 +161,10 @@ This test set a new value to every leaf on the large test object 1000 times.
 
 | Test Label                            | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ------------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| native-write                          |           6.25 |    2664.25531 |                5650.11 |              511.36048 |                 1 |               469 |
-| immer-write                           |           9.88 |    8873.15651 |                2805.30 |              137.01767 |                 0 |               203 |
-| mediary-write                         |           2.56 |    8163.23233 |                5728.72 |              414.54735 |                 1 |               476 |
-| realize-write                         |           3.02 |   13188.34618 |                8695.57 |              845.90822 |                 5 |               643 |
-
-Here, mediary wins on space complexity but takes a hit on time complexity. That said, the minor slow down should be an acceptable trade off for most applications.
+| native-write                          |          17.65 |    1356.19722 |                5658.90 |              250.42288 |                 1 |               471 |
+| mediary-write                         |          15.37 |    4660.59500 |                5735.95 |              254.60823 |                 1 |               474 |
+| immer-write                           |          12.66 |    5309.32262 |                2893.00 |               82.96756 |                 0 |               209 |
+| realize-write                         |          40.15 |   11832.13345 |                8709.41 |             1554.23078 |                85 |               667 |
 
 # License
 

@@ -20,7 +20,6 @@ while (i < times) {
         a: 1,
         b: 'Some data here'
     };
-    return cloned;
     i++;
 }
 data = cloned;

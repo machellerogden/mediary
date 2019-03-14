@@ -3,9 +3,6 @@
 const { start, end, times } = require('hbu');
 
 const data = require('../../data');
-const { deepFreeze } = require('../../../util');
-
-deepFreeze(data);
 
 function deepClone(o) {
     if (!(Object.is(o.constructor, Object) || Object.is(o.constructor, Array))) return o;

@@ -3,8 +3,6 @@
 const { start, end, times } = require('hbu');
 
 const data = require('../../data');
-const { deepFreeze } = require('../../../util');
-deepFreeze(data);
 
 const leak = [];
 
