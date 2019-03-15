@@ -1,10 +1,8 @@
 # Mediary
 
-> Deep "clone" without the memory complexity.
+> Mediary implements structural sharing via proxies in order to provide a transparent virtualization for deep cloning.
 
-*WARNING:* This is an experiment. Use at your own risk.
-
-Mediary implements structural sharing via proxies in order to provide a transparent virtualization for deep cloning with low memory usage and reasonable performance characteristics.
+*WARNING:* This is an experiment. Use at your own risk. Mediary in it's current form has the potential to put quite a bit of pressure on the garbage collector. A well-implemented approach to structural sharing should have the opposite affect. It is not recommended to use this in a production environment.
 
 Use Mediary's `clone` function to get an object representation which, for all intents and purposes, acts like a deeply cloned copy of your original data.
 
@@ -56,30 +54,6 @@ It is recommended that you always `'use strict'` so that an error is thrown when
 'use strict';
 
 foo.a = "z"; // => TypeError: Cannot assign to read only property 'a' of object '#<Object>'
-```
-
-# Differences from Immer
-
-I read the Immer source after I finished writing the first draft of Mediary and I was surprise how similar the approach was. Both use Proxies and maintain an internal layer for patching change to objects. The main difference between Immer and Mediary is that Mediary exposes a more primitive layer than Immer. By exposing this layer, Mediary allows you to easily bake structural sharing into other libraries and projects. That said, if you prefer to Immer's usage pattern, Mediary exports a `produce` function.
-
-```
-const { produce } = require('mediary');
-
-const foo = {
-    a: {
-        b: 'b',
-        c: 'c'
-    }
-};
-
-const bar = produce(foo, draft => {
-    draft.a.d = 'd';
-    return draft;
-});
-
-console.log(foo); // => { a: { b: 'b', c: 'c' } }
-
-console.log(bar); // => { a: { b: 'b', c: 'c', d: 'd'  } }
 ```
 
 # Benchmarks
