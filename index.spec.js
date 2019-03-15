@@ -743,4 +743,8 @@ test('realize basics deep', t => {
     t.is(bar.a.b[0].c, 'z');
     t.is(foo.a.e, 'f');
     t.is(bar.a.e, 'z');
+    t.is(bar[Sym], void 0);
+    t.is(bar.a[Sym], void 0);
+    t.is(bar.a.b[Sym], void 0);
+    t.is(bar.a.b[0][Sym], void 0);
 });

@@ -2,15 +2,15 @@
 
 const { start, end, times } = require('hbu');
 
-const { realize, mediary } = require('../../..');
+const { clone } = require('../../..');
 const data = require('../../data');
+const cloned = clone(data);
 
 let i = 0;
 
 start();
 
 while (i < times) {
-    const cloned = realize(mediary(data));
     [ 'a', 'b', 'c', 'd', 'e', 'f', 'g' ].forEach(k => {
         cloned[k].forEach(v => {
             v._id;

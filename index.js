@@ -161,45 +161,23 @@ function realize(given) {
     if (given == null
         || typeof given !== 'object'
         || !given[Sym]) return given;
-    const {
-        target,
-        patch,
-        ownKeys
-    } = given[SymMeta];
-    return reduce([ ...ownKeys() ], (acc, k) => {
-        acc[k] = realize(given[k]);
-        return acc;
-    });
+    return JSON.parse(JSON.stringify(given));
 }
 
 exports.clone = given => mediary(realize(given));
-exports.realize = realize;
 exports.mediary = mediary;
 exports.Sym = Sym;
 exports.SymMeta = SymMeta;
 
-
 // Below are some functions which support immer's `produce` pattern.
 
-// `produce` is a drop-in replacement for immer `produce`. returns plain old
-// javascript object, just like immer. Warning: Performance of `produce` is
-// poor. This is an antipattern in mediary. This function is here to provide
-// a possible migration path. If you need something similar but want good
-// performance please consider using the `create` function below instead.
+// `produce` is a drop-in replacement for immer `produce`. This function
+// is here to provide a possible migration path. Note that `produce`
+// returns a mediary object, unlike immer's `produce` which returns a
+// plain old javascript object. With mediary there is no need to
+// ever "realize" the object.
 exports.produce = (given, fn) => {
-    const cloned = mediary(given);
-    fn(cloned);
-    return realize(cloned);
-};
-
-// `create` returns a mediary object. With mediary there is usually no need to
-// ever "realize" the object. If you really want to use immer's `produce`
-// pattern and you want good performance use the `create` method. But if you
-// are thinking about using this, ask yourself "why am I using immer's pattern
-// when I now have a transparent virtualization?". Again, this is here to
-// provide a migration path.
-exports.create = (given, fn) => {
-    const cloned = mediary(given);
+    const cloned = mediary(realize(given));
     fn(cloned);
     return cloned;
 };
