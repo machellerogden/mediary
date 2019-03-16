@@ -7,7 +7,6 @@ const {
 
 const {
     reduce,
-    lengthFromKeys,
     deepFreeze
 } = require('./util');
 
@@ -31,7 +30,7 @@ function mediary(given, recurrence) {
         throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object` or `undefined`)');
     }
 
-    deepFreeze(given);
+    //deepFreeze(given);
 
     const givenKeys = Reflect.ownKeys(given);
     const patch = {};
@@ -81,14 +80,6 @@ function mediary(given, recurrence) {
         deleteProperty(target, prop) {
             changes.delete(prop);
             return Reflect.deleteProperty(target, prop);
-        },
-
-        getPrototypeOf (target) {
-            return Reflect.getPrototypeOf(target);
-        },
-
-        setPrototypeOf (target, prototype) {
-            return Reflect.getPrototypeOf(target, prototype);
         },
 
         ownKeys (target) {
