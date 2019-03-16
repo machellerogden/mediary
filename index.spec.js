@@ -149,18 +149,77 @@ test('base array 2', t => {
     const foo = [
         {
             a: 'a'
-        }
+        },
+        [
+            {
+                b: 'b'
+            },
+            {
+                c: 'c'
+            }
+        ]
     ];
     const bar = clone(foo);
     bar.push('b');
-    t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
+    t.deepEqual(bar, [
+        { a: 'a' },
+        [
+            {
+                b: 'b'
+            },
+            {
+                c: 'c'
+            }
+        ],
+        'b'
+    ]);
     bar.push('b');
-    t.deepEqual(bar, [ { a: 'a' }, 'b', 'b' ]);
-    t.deepEqual(foo, [ { a: 'a' } ]);
+    t.deepEqual(bar, [
+        { a: 'a' },
+        [
+            {
+                b: 'b'
+            },
+            {
+                c: 'c'
+            }
+        ],
+        'b',
+        'b'
+    ]);
+    t.deepEqual(foo, [
+        { a: 'a' },
+        [
+            {
+                b: 'b'
+            },
+            {
+                c: 'c'
+            }
+        ]
+    ]);
     t.true(bar[0][Sym]);
     bar[0].a = 'b';
     t.deepEqual(bar[0][SymMeta].patch, { a: 'b' });
     t.true(bar[0][SymMeta].additions.has('a'));
+    t.true(bar[1][0][Sym]);
+    t.true(bar[1][1][Sym]);
+});
+
+test('base array 3', t => {
+    const foo = [
+        {
+            a: 'a'
+        }
+    ];
+    const bar = clone(foo);
+    bar.push({ b: 'b' });
+    t.deepEqual(bar, [
+        { a: 'a' },
+        { b: 'b' }
+    ]);
+    // TODO
+    t.true.skip(bar[1][Sym]);
 });
 
 test('change length', t => {
