@@ -148,8 +148,6 @@ exports.mediary = mediary;
 exports.Sym = Sym;
 exports.SymMeta = SymMeta;
 
-// Below are some functions which support immer's `produce` pattern.
-
 // `produce` is a drop-in replacement for immer `produce`. This function
 // is here to provide a possible migration path. Note that `produce`
 // returns a mediary object, unlike immer's `produce` which returns a
