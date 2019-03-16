@@ -30,7 +30,7 @@ function mediary(given, recurrence) {
         throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object` or `undefined`)');
     }
 
-    //deepFreeze(given);
+    deepFreeze(given);
 
     const givenKeys = Reflect.ownKeys(given);
     const patch = {};
