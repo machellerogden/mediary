@@ -5,27 +5,36 @@ const {
     SymMeta
 } = require('./Sym');
 
-const ArrayPrototype = require('./Array');
-
 const {
     reduce,
     lengthFromKeys,
     deepFreeze
 } = require('./util');
 
-function mediary(given) {
-    if (given == null || typeof given !== 'object' || given[Sym]) return given;
+const unsupported = given =>
+    given == null
+    || typeof given !== 'object'
+    || Array.isArray(given);
 
-    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, Array) || Object.is(given.constructor, void 0))) {
-        throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object`, `Array` or `undefined`)');
+const mediateNestedArrays = (given, recurrence) =>
+    Array.isArray(given)
+        ? given.map(v => Array.isArray(v)
+            ? mediateNestedArrays(v)
+            : mediary(v, recurrence))
+        : mediary(given, recurrence);
+
+function mediary(given, recurrence) {
+    if (Array.isArray(given) && !recurrence) return mediateNestedArrays(given, false);
+    if (unsupported(given) || given[Sym]) return given;
+
+    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, void 0))) {
+        throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object` or `undefined`)');
     }
 
     deepFreeze(given);
 
-    const isArray = Array.isArray(given);
     const givenKeys = Reflect.ownKeys(given);
-    const patch = isArray ? [] : {};
-    if (isArray) Reflect.setPrototypeOf(patch, ArrayPrototype);
+    const patch = {};
     const additions = new Set();
     const deletions = new Set();
 
@@ -59,7 +68,6 @@ function mediary(given) {
         additions,
         deletions,
         patch,
-        isArray,
         ownKeys
     };
 
@@ -98,15 +106,6 @@ function mediary(given) {
                 ? Reflect.getOwnPropertyDescriptor(target, prop)
                 : Reflect.getOwnPropertyDescriptor(given, prop);
 
-            if (isArray && prop === 'length') {
-                return {
-                    writable: true,
-                    configurable: false,
-                    enumerable: false,
-                    value: lengthFromKeys([ ...ownKeys() ])
-                };
-            }
-
             return desc && !deletions.has(prop)
                 ? { ...desc, writable: true, configurable: true }
                 : void 0;
@@ -116,13 +115,14 @@ function mediary(given) {
             if (prop === Sym) return true;
             if (prop === SymMeta) return meta;
             if (changes.deleted(prop)) return void 0;
-            if (prop === 'length' && isArray) {
-                return lengthFromKeys([ ...ownKeys() ]);
-            }
 
             if (!changes.touched(prop) && givenKeys.includes(prop)) {
                 changes.add(prop);
-                target[prop] = mediary(given[prop]);
+                if (Array.isArray(given[prop])) {
+                    target[prop] = mediateNestedArrays(given[prop], true);
+                } else {
+                    target[prop] = mediary(given[prop], true);
+                }
             }
 
             const value = Reflect.has(target, prop)
@@ -133,37 +133,25 @@ function mediary(given) {
         },
 
         set (target, prop, value, receiver) {
-            if (prop === 'length' && isArray) {
-                const length = lengthFromKeys([ ...ownKeys() ]);
-                const v = parseInt(value, 10);
-                let i = v;
-                while (length > i) {
-                    changes.delete(i);
-                    Reflect.deleteProperty(target, i);
-                    i++;
-                }
-
-                i = length;
-                while (v > i) {
-                    changes.add(i);
-                    Reflect.set(target, i, void 0);
-                    i++;
-                }
-            }
             changes.add(prop);
             return Reflect.set(target, prop, value);
         }
     });
 
 }
+const clone = x => Array.isArray(x)
+    ? x.map(clone)
+    : x != null && typeof x === 'object'
+        ? Object.entries(x).reduce((a, [k, v]) => (a[k] = clone(v), a), {})
+        : x;
 
 function realize(given) {
-    if (given == null
-        || typeof given !== 'object'
-        || !given[Sym]) return given;
-    return JSON.parse(JSON.stringify(given));
+    if (Array.isArray(given)) return given.map(realize);
+    if (unsupported(given) || !given[Sym]) return given;
+    return clone(given);
 }
 
+exports.realize = realize;
 exports.clone = given => mediary(realize(given));
 exports.mediary = mediary;
 exports.Sym = Sym;

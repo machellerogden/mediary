@@ -40,10 +40,7 @@ test('basics deep', t => {
     t.true(bar.a.b[0][SymMeta].additions.has('c'));
     t.true(bar.a[SymMeta].additions.has('e'));
     t.deepEqual(bar.a.b[0][SymMeta].patch, { c: 'z' });
-    t.deepEqual(bar.a.b[SymMeta].patch[0][SymMeta].patch, { c: 'z' });
     t.deepEqual(bar.a[SymMeta].patch, { b: [ { c: 'z' } ], e: 'z' });
-    t.true(bar.a[SymMeta].patch.b[Sym]);
-    t.deepEqual(bar.a[SymMeta].patch.b[SymMeta].patch[0][SymMeta].patch, { c: 'z' });
 });
 
 
@@ -119,9 +116,6 @@ test('spread 4', t => {
             another: 'entry'
         }
     ]);
-
-    t.true(bar.c[SymMeta].additions.has('0'));
-    t.deepEqual(bar.c[SymMeta].patch, [ { d: 'd', another: 'entry' } ]);
 });
 
 test('set an array', t => {
@@ -144,12 +138,11 @@ test('base array', t => {
         }
     ];
     const bar = clone(foo);
-    bar[1] = 'b';
-    t.deepEqual(bar[0], { a: 'a' });
-    t.deepEqual(bar[1], 'b');
-    t.deepEqual(bar.length, 2);
-    t.true(bar[SymMeta].additions.has('1'));
-    t.deepEqual(bar[SymMeta].patch, [ { a: 'a' }, 'b' ]);
+    bar[0].a = 'b';
+    t.deepEqual(foo[0].a, 'a');
+    t.deepEqual(bar[0].a, 'b');
+    t.true(bar[0][SymMeta].additions.has('a'));
+    t.deepEqual(bar[0][SymMeta].patch, { a: 'b' });
 });
 
 test('base array 2', t => {
@@ -161,13 +154,13 @@ test('base array 2', t => {
     const bar = clone(foo);
     bar.push('b');
     t.deepEqual(bar, [ { a: 'a' }, 'b' ]);
-    t.true(bar[SymMeta].additions.has('1'));
-    t.false(bar[SymMeta].additions.has('2'));
     bar.push('b');
     t.deepEqual(bar, [ { a: 'a' }, 'b', 'b' ]);
     t.deepEqual(foo, [ { a: 'a' } ]);
-    t.true(bar[SymMeta].additions.has('2'));
-    t.deepEqual(bar[SymMeta].patch, [ { a: 'a' }, 'b', 'b' ]);
+    t.true(bar[0][Sym]);
+    bar[0].a = 'b';
+    t.deepEqual(bar[0][SymMeta].patch, { a: 'b' });
+    t.true(bar[0][SymMeta].additions.has('a'));
 });
 
 test('change length', t => {
@@ -195,8 +188,6 @@ test('push 1', t => {
     bar.c.push('d');
     t.deepEqual(foo.c, [ 'c' ]);
     t.deepEqual(bar.c, [ 'c', 'd' ]);
-    t.true(bar.c[SymMeta].additions.has('1'));
-    t.deepEqual(bar.c[SymMeta].patch, [ 'c', 'd' ]);
 });
 
 test('push 2', t => {
@@ -214,9 +205,6 @@ test('push 2', t => {
     bar.a.b.push('new value');
     t.deepEqual(foo.a.b, [ { c: 'd' } ]);
     t.deepEqual(bar.a.b, [ { c: 'd' }, 'new value' ]);
-    t.true(bar.a.b[SymMeta].additions.has('1'));
-    t.deepEqual(bar.a.b[SymMeta].patch, [ { c: 'd' }, 'new value']);
-    t.deepEqual(bar.a.b[SymMeta].patch[0][SymMeta].patch, { c: 'd' });
 });
 
 test('delete shallow', t => {
@@ -262,9 +250,6 @@ test('splice shallow', t => {
     bar.splice(1);
     t.deepEqual(foo, [ 'a', 'b', 'c' ]);
     t.deepEqual(bar, [ 'a' ]);
-    t.deepEqual(bar[SymMeta].patch, [ 'a' ]);
-    t.true(bar[SymMeta].deletions.has('1'));
-    t.true(bar[SymMeta].deletions.has('2'));
 });
 
 test('splice deep', t => {
@@ -280,10 +265,6 @@ test('splice deep', t => {
         a: [ 'a' ]
     });
     t.deepEqual(bar[SymMeta].patch, { a: [ 'a' ] });
-    t.true(bar[SymMeta].patch.a[Sym]);
-    t.deepEqual(bar.a[SymMeta].patch, [ 'a' ]);
-    t.true(bar.a[SymMeta].deletions.has('1'));
-    t.true(bar.a[SymMeta].deletions.has('2'));
 });
 
 test('shift shallow', t => {
@@ -600,20 +581,16 @@ test('includes', t => {
     const b = { b: "b" };
     const foo = [ 1, 2, a, [ 4 , b ] ];
     const bar = clone(foo);
-    t.is(true, bar.includes(a));
+    t.is(false, bar.includes(a));
     t.is(true, bar.includes(1));
     bar[0] = 2;
     t.is(false, bar.includes(1));
     t.is(true, bar.includes(2));
-    t.is(true, bar.includes(a));
-    bar[2].a; // it should be noted that accessing `a` proxies the object...
-    t.is(false, bar.includes(a)); // and now `includes` will return false. this is correct but may lead to confusion.
-    t.is(false, bar.includes({ a: "a" }));
+    t.is(false, bar.includes(a));
     t.is(true, bar[3].includes(4));
-    t.is(true, bar[3].includes(b));
+    t.is(false, bar[3].includes(b));
     bar[3][0] = 6;
     t.is(false, bar[3].includes(4));
-    t.is(true, bar[3].includes(b));
     bar[3][1] = 5;
     t.is(true, bar[3].includes(5));
 });
@@ -622,9 +599,7 @@ test('indexOf', t => {
     const a = { b: "b" };
     const foo = [ 1, 2, a, 4, 5 ];
     const bar = clone(foo);
-    t.is(2, bar.indexOf(a));
-    bar[2].a; // it should be noted that accessing `a` proxies the object...
-    t.is(-1, bar.indexOf(a)); // and now `indexOf` will return -1. this is correct but may lead to confusion.
+    t.is(-1, bar.indexOf(a));
     t.is(0, bar.indexOf(1));
     t.is(1, bar.indexOf(2));
     bar[0] = 2;
@@ -638,9 +613,7 @@ test('lastIndexOf', t => {
     const foo = [ 1, 2, a, 4, 4 ];
     const bar = clone(foo);
     t.is(4, bar.lastIndexOf(4));
-    t.is(2, bar.lastIndexOf(a));
-    bar[2].a; // it should be noted that accessing `a` proxies the object...
-    t.is(-1, bar.lastIndexOf(a)); // and now `lastIndexOf` will return -1. this is correct but may lead to confusion.
+    t.is(-1, bar.lastIndexOf(a));
     t.is(0, bar.lastIndexOf(1));
     t.is(1, bar.lastIndexOf(2));
     bar[0] = 2;
