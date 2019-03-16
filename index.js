@@ -7,31 +7,34 @@ const {
 
 const {
     reduce,
-    deepFreeze
+    deepFreeze,
+    isNumber
 } = require('./util');
 
 const ArrayHandler = {
     get (target, prop, receiver) {
         if (prop === Sym) return true;
-        if (typeof prop === 'string' && /[0-9]+/.test(prop)) {
-            target[prop] = mediary(target[prop]);
-        }
+        if (isNumber(prop)) target[prop] = mediary(target[prop]);
         return Reflect.get(target, prop, receiver);
     }
 };
 
+function validateObject(given) {
+    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, void 0))) {
+        throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object`, `Array` or `undefined`)');
+    }
+}
+
 function mediary(given) {
     if (given == null
-        || typeof given !== 'object') return given;
-    if (given[Sym]) return given;
+        || typeof given !== 'object'
+        || given[Sym]) return given;
 
     deepFreeze(given);
 
     if (Array.isArray(given)) return new Proxy([ ...given ], ArrayHandler);
 
-    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, void 0))) {
-        throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object` or `undefined`)');
-    }
+    validateObject(given);
 
     const givenKeys = Reflect.ownKeys(given);
     const patch = {};
@@ -134,7 +137,6 @@ const clone = x => Array.isArray(x)
         : x;
 
 function realize(given) {
-    if (Array.isArray(given)) return given.map(realize);
     if (given == null
         || typeof given !== 'object'
         || !given[Sym]) return given;

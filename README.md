@@ -81,10 +81,10 @@ This test simulates the real-world use case of adding small changes over time to
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| mediary-incremental                |           0.48 |       3.43279 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-incremental                  |           7.77 |     351.10688 |                 194.50 |                7.68352 |                 0 |                54 |
-| mediary-clone-incremental          |           3.80 |    4305.56897 |                1949.14 |               64.68183 |                 0 |               166 |
-| mediary-produce-incremental        |           4.09 |    4298.57232 |                1949.32 |               65.49112 |                 0 |               168 |
+| mediary-incremental                |           0.40 |       3.81824 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-incremental                  |           7.74 |     347.23381 |                 194.48 |                7.45506 |                 0 |                55 |
+| mediary-clone-incremental          |          11.86 |    5073.50561 |                2224.01 |               79.00755 |                 0 |               185 |
+| mediary-produce-incremental        |           8.50 |    5037.51590 |                2227.62 |               80.83375 |                 0 |               185 |
 
 # Incremental Changes (in a single pass)
 
@@ -99,10 +99,10 @@ This test simulates the real-world use case of adding lots of small changes to a
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| mediary-incremental-single         |           0.37 |       3.24546 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-clone-incremental-single   |           0.37 |       3.10791 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-produce-incremental-single |           0.38 |       3.30183 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-incremental-single           |           1.31 |       5.44349 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-incremental-single         |           0.29 |       3.34065 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-clone-incremental-single   |           0.29 |       3.46611 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-produce-incremental-single |           0.30 |       3.79097 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-incremental-single           |           1.31 |       5.85721 |                   0.00 |                0.00000 |                 0 |                 0 |
 
 # Object Creation
 
@@ -126,11 +126,11 @@ Four clone implementations are tested:
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| immer-leak                         |           0.98 |       2.17010 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-leak                       |           1.88 |       3.22741 |                  -0.60 |                0.84085 |                 0 |                 1 |
-| mediary-clone-leak                 |           1.89 |       3.37674 |                  -0.59 |                0.84555 |                 0 |                 1 |
-| stringify-leak                     |         146.23 |    1839.33964 |                   0.00 |                0.00000 |                 0 |                 0 |
-| deepclone-leak                     |         259.99 |    2044.35283 |                 803.57 |              122.66459 |                 6 |                65 |
+| immer-leak                         |           0.98 |       2.13926 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-leak                       |           2.09 |       9.76151 |                  -0.60 |                1.10168 |                 0 |                 2 |
+| mediary-clone-leak                 |           2.06 |       9.99937 |                  -0.52 |                1.30629 |                 0 |                 2 |
+| stringify-leak                     |         146.26 |    1835.62634 |                 439.60 |               34.37743 |                 3 |                45 |
+| deepclone-leak                     |         259.58 |    2011.54432 |                 803.89 |              125.62890 |                 6 |                65 |
 
 # Property Get
 
@@ -145,10 +145,10 @@ This test reads every leaf on the large test object 1000 times.
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| native-read                        |           1.04 |       6.77288 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-clone-read                 |           5.33 |    2037.57388 |                 639.64 |               16.18147 |                 0 |               165 |
-| mediary-read                       |           5.35 |    2047.89627 |                 639.57 |               15.66327 |                 0 |               165 |
-| immer-read                         |           3.24 |    1508.98368 |                 570.51 |               13.79309 |                 0 |               147 |
+| native-read                        |           1.05 |       6.70976 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-read                         |           3.23 |    1599.09688 |                 570.50 |               13.79786 |                 0 |               147 |
+| mediary-clone-read                 |           2.36 |    2057.21240 |                 403.51 |               12.01392 |                 0 |               105 |
+| mediary-read                       |           2.41 |    2083.49808 |                 403.47 |               11.40784 |                 0 |               105 |
 
 # Property Set
 
@@ -163,10 +163,10 @@ This test set a new value to every leaf on the large test object 1000 times.
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| immer-write                        |          12.65 |    5353.79448 |                2892.89 |               83.82939 |                 0 |               209 |
-| mediary-clone-write                |          15.86 |    4686.30665 |                5726.99 |              251.18827 |                 1 |               476 |
-| mediary-write                      |          18.87 |    4695.56859 |                5727.26 |              252.21491 |                 1 |               475 |
-| native-write                       |          17.51 |    1334.33644 |                   0.00 |                0.00000 |                 0 |                 0 |
+| native-write                       |          17.42 |    1326.19832 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-write                      |          19.25 |    4500.62627 |                5717.20 |              253.12504 |                 1 |               472 |
+| mediary-clone-write                |          16.04 |    4544.58994 |                5718.08 |              258.70548 |                 1 |               473 |
+| immer-write                        |           2.21 |    5275.65389 |                2903.41 |               85.99486 |                 0 |               209 |
 
 # License
 
