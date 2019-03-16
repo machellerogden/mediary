@@ -74,13 +74,6 @@ This test simulates the real-world use case of adding small changes over time to
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| mediary-incremental                |           0.31 |       1.92545 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-incremental                  |           2.22 |     337.81584 |                 192.50 |                8.16256 |                 0 |                55 |
-| mediary-clone-incremental          |           4.02 |    4163.32902 |                1877.62 |               66.35831 |                 0 |               164 |
-| mediary-produce-incremental        |          11.49 |    4170.67647 |                1870.27 |               64.46807 |                 0 |               163 |
-
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
 | mediary-incremental                |           0.40 |       3.81824 |                   0.00 |                0.00000 |                 0 |                 0 |
 | immer-incremental                  |           7.74 |     347.23381 |                 194.48 |                7.45506 |                 0 |                55 |
 | mediary-clone-incremental          |          11.86 |    5073.50561 |                2224.01 |               79.00755 |                 0 |               185 |
@@ -89,13 +82,6 @@ This test simulates the real-world use case of adding small changes over time to
 # Incremental Changes (in a single pass)
 
 This test simulates the real-world use case of adding lots of small changes to a given object in a single pass. 1000 such changes are made to a single cloned object.
-
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| mediary-incremental-single         |           0.20 |       1.53881 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-produce-incremental-single |           0.21 |       1.87243 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-clone-incremental-single   |           0.20 |       1.87357 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-incremental-single           |           1.31 |       5.70892 |                   0.00 |                0.00000 |                 0 |                 0 |
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
@@ -118,14 +104,6 @@ Four clone implementations are tested:
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| immer-leak                         |           0.98 |       2.14450 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-leak                       |           1.88 |       3.24787 |                  -0.60 |                0.78933 |                 0 |                 1 |
-| mediary-clone-leak                 |           1.88 |       3.53849 |                  -0.60 |                0.86650 |                 0 |                 1 |
-| stringify-leak                     |         146.23 |    1823.62126 |                 439.43 |               33.61272 |                 3 |                45 |
-| deepclone-leak                     |         198.25 |    2052.18435 |                 795.02 |              123.30953 |                 6 |                65 |
-
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
 | immer-leak                         |           0.98 |       2.13926 |                   0.00 |                0.00000 |                 0 |                 0 |
 | mediary-leak                       |           2.09 |       9.76151 |                  -0.60 |                1.10168 |                 0 |                 2 |
 | mediary-clone-leak                 |           2.06 |       9.99937 |                  -0.52 |                1.30629 |                 0 |                 2 |
@@ -138,13 +116,6 @@ This test reads every leaf on the large test object 1000 times.
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| native-read                        |           1.03 |       6.65384 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-clone-read                 |           2.57 |     699.37543 |                  -0.41 |                1.78676 |                 0 |                 2 |
-| mediary-read                       |           2.57 |     709.32986 |                  -0.41 |                1.43542 |                 0 |                 2 |
-| immer-read                         |           3.23 |    1502.64188 |                 570.50 |               13.24639 |                 0 |               147 |
-
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
 | native-read                        |           1.05 |       6.70976 |                   0.00 |                0.00000 |                 0 |                 0 |
 | immer-read                         |           3.23 |    1599.09688 |                 570.50 |               13.79786 |                 0 |               147 |
 | mediary-clone-read                 |           2.36 |    2057.21240 |                 403.51 |               12.01392 |                 0 |               105 |
@@ -153,13 +124,6 @@ This test reads every leaf on the large test object 1000 times.
 # Property Set
 
 This test set a new value to every leaf on the large test object 1000 times.
-
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| native-write                       |          17.45 |    1336.10053 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-write                      |          10.93 |    2344.70804 |                5666.20 |              245.83734 |                 1 |               471 |
-| mediary-clone-write                |          20.42 |    2382.25871 |                5666.10 |              254.56260 |                 1 |               471 |
-| immer-write                        |           9.70 |    5526.28962 |                2895.96 |               85.65771 |                 0 |               208 |
 
 | Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
 | ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
