@@ -219,7 +219,7 @@ test('base array 3', t => {
         { b: 'b' }
     ]);
     // TODO
-    t.true.skip(bar[1][Sym]);
+    t.true(bar[1][Sym]);
 });
 
 test('change length', t => {

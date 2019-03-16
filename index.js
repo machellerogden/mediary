@@ -10,27 +10,28 @@ const {
     deepFreeze
 } = require('./util');
 
-const unsupported = given =>
-    given == null
-    || typeof given !== 'object'
-    || Array.isArray(given);
+const ArrayHandler = {
+    get (target, prop, receiver) {
+        if (prop === Sym) return true;
+        if (typeof prop === 'string' && /[0-9]+/.test(prop)) {
+            target[prop] = mediary(target[prop]);
+        }
+        return Reflect.get(target, prop, receiver);
+    }
+};
 
-const mediateNestedArrays = (given, recurrence) =>
-    Array.isArray(given)
-        ? given.map(v => Array.isArray(v)
-            ? mediateNestedArrays(v)
-            : mediary(v, recurrence))
-        : mediary(given, recurrence);
+function mediary(given) {
+    if (given == null
+        || typeof given !== 'object') return given;
+    if (given[Sym]) return given;
 
-function mediary(given, recurrence) {
-    if (Array.isArray(given) && !recurrence) return mediateNestedArrays(given, false);
-    if (unsupported(given) || given[Sym]) return given;
+    deepFreeze(given);
+
+    if (Array.isArray(given)) return new Proxy([ ...given ], ArrayHandler);
 
     if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, void 0))) {
         throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object` or `undefined`)');
     }
-
-    deepFreeze(given);
 
     const givenKeys = Reflect.ownKeys(given);
     const patch = {};
@@ -109,11 +110,7 @@ function mediary(given, recurrence) {
 
             if (!changes.touched(prop) && givenKeys.includes(prop)) {
                 changes.add(prop);
-                if (Array.isArray(given[prop])) {
-                    target[prop] = mediateNestedArrays(given[prop], true);
-                } else {
-                    target[prop] = mediary(given[prop], true);
-                }
+                target[prop] = mediary(given[prop]);
             }
 
             const value = Reflect.has(target, prop)
@@ -138,7 +135,9 @@ const clone = x => Array.isArray(x)
 
 function realize(given) {
     if (Array.isArray(given)) return given.map(realize);
-    if (unsupported(given) || !given[Sym]) return given;
+    if (given == null
+        || typeof given !== 'object'
+        || !given[Sym]) return given;
     return clone(given);
 }
 
