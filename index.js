@@ -25,6 +25,73 @@ function validateObject(given) {
     }
 }
 
+const internals = new WeakMap();
+
+const ObjectHandler = {
+
+    defineProperty(target, prop, attr) {
+        const meta = internals.get(target);
+        meta.additions.add(String(prop));
+        meta.deletions.delete(String(prop));
+        return Reflect.defineProperty(meta.patch, prop, attr);
+    },
+
+    deleteProperty(target, prop) {
+        const meta = internals.get(target);
+        meta.deletions.add(String(prop));
+        meta.additions.delete(String(prop));
+        return Reflect.deleteProperty(meta.patch, prop);
+    },
+
+    ownKeys (target) {
+        return [ ...internals.get(target).ownKeys() ];
+    },
+
+    has (target, prop) {
+        const meta = internals.get(target);
+        return !meta.deletions.has(String(prop)) && (meta.additions.has(String(prop)) || Reflect.has(meta.target));
+    },
+
+    getOwnPropertyDescriptor (target, prop) {
+        const meta = internals.get(target);
+        if (meta.deletions.has(String(prop)) || [ Sym, SymMeta ].includes(prop)) return void 0;
+
+        const desc = Reflect.has(meta.patch, prop)
+            ? Reflect.getOwnPropertyDescriptor(meta.patch, prop)
+            : Reflect.getOwnPropertyDescriptor(meta.target, prop);
+
+        return desc && !meta.deletions.has(String(prop))
+            ? { ...desc, writable: true, configurable: true }
+            : void 0;
+    },
+
+    get (target, prop, receiver) {
+        if (prop === Sym) return true;
+        const meta = internals.get(target);
+        if (prop === SymMeta) return meta;
+        if (meta.deletions.has(String(prop))) return void 0;
+
+        if (!(meta.additions.has(String(prop)) || meta.deletions.has(String(prop))) && meta.givenKeys.includes(prop)) {
+            meta.additions.add(String(prop));
+            meta.deletions.delete(String(prop));
+            meta.patch[prop] = mediary(meta.target[prop]);
+        }
+
+        const value = Reflect.has(meta.patch, prop)
+            ? Reflect.get(meta.patch, prop)
+            : Reflect.get(meta.target, prop);
+
+        return value;
+    },
+
+    set (target, prop, value, receiver) {
+        const meta = internals.get(target);
+        meta.additions.add(String(prop));
+        meta.deletions.delete(String(prop));
+        return Reflect.set(meta.patch, prop, value);
+    }
+};
+
 function mediary(given) {
     if (given == null
         || typeof given !== 'object'
@@ -36,100 +103,27 @@ function mediary(given) {
 
     validateObject(given);
 
-    const givenKeys = Reflect.ownKeys(given);
     const patch = {};
-    const additions = new Set();
-    const deletions = new Set();
-
-    const ownKeys = () => new Set([
-        ...givenKeys.filter(k => !deletions.has(k)),
-        ...additions
-    ]);
-
-    const changes = {
-        add (p) {
-            additions.add(String(p)),
-            deletions.delete(String(p))
-        },
-        delete (p) {
-            deletions.add(String(p)),
-            additions.delete(String(p))
-        },
-        added (p) {
-            return additions.has(String(p));
-        },
-        deleted (p) {
-            return deletions.has(String(p));
-        },
-        touched (p) {
-            return additions.has(String(p)) || deletions.has(String(p));
-        }
-    };
 
     const meta = {
         target: given,
-        additions,
-        deletions,
         patch,
-        ownKeys
+        givenKeys: Reflect.ownKeys(given),
+        additions: new Set(),
+        deletions: new Set(),
+        ownKeys() {
+            return new Set([
+                ...this.givenKeys.filter(k => !this.deletions.has(k)),
+                ...this.additions
+            ]);
+        }
     };
 
-    return new Proxy(patch, {
-
-        defineProperty(target, prop, attr) {
-            changes.add(prop);
-            return Reflect.defineProperty(target, prop, attr);
-        },
-
-        deleteProperty(target, prop) {
-            changes.delete(prop);
-            return Reflect.deleteProperty(target, prop);
-        },
-
-        ownKeys (target) {
-            return [ ...ownKeys() ];
-        },
-
-        has (target, prop) {
-            return !changes.deleted(prop) && (additions.has(prop) || Reflect.has(given));
-        },
-
-        getOwnPropertyDescriptor (target, prop) {
-            if (changes.deleted(prop) || [ Sym, SymMeta ].includes(prop)) return void 0;
-
-            const desc = Reflect.has(target, prop)
-                ? Reflect.getOwnPropertyDescriptor(target, prop)
-                : Reflect.getOwnPropertyDescriptor(given, prop);
-
-            return desc && !deletions.has(prop)
-                ? { ...desc, writable: true, configurable: true }
-                : void 0;
-        },
-
-        get (target, prop, receiver) {
-            if (prop === Sym) return true;
-            if (prop === SymMeta) return meta;
-            if (changes.deleted(prop)) return void 0;
-
-            if (!changes.touched(prop) && givenKeys.includes(prop)) {
-                changes.add(prop);
-                target[prop] = mediary(given[prop]);
-            }
-
-            const value = Reflect.has(target, prop)
-                ? Reflect.get(target, prop)
-                : Reflect.get(given, prop);
-
-            return value;
-        },
-
-        set (target, prop, value, receiver) {
-            changes.add(prop);
-            return Reflect.set(target, prop, value);
-        }
-    });
-
+    const key = {};
+    internals.set(key, meta);
+    return new Proxy(key, ObjectHandler);
 }
+
 const clone = x => Array.isArray(x)
     ? x.map(clone)
     : x != null && typeof x === 'object'
