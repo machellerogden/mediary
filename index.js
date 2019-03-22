@@ -11,6 +11,8 @@ const {
     isNumber
 } = require('./util');
 
+const nil = void 0;
+
 const ArrayHandler = {
     get (target, prop, receiver) {
         if (prop === Sym) return true;
@@ -20,7 +22,7 @@ const ArrayHandler = {
 };
 
 function validateObject(given) {
-    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, void 0))) {
+    if (!(Object.is(given.constructor, Object) || Object.is(given.constructor, nil))) {
         throw new TypeError('mediary only supports cloning simple objects (constructor must be `Object`, `Array` or `undefined`)');
     }
 }
@@ -29,14 +31,14 @@ const internals = new WeakMap();
 
 const ObjectHandler = {
 
-    defineProperty(target, prop, attr) {
+    defineProperty (target, prop, attr) {
         const meta = internals.get(target);
         meta.additions.add(String(prop));
         meta.deletions.delete(String(prop));
         return Reflect.defineProperty(meta.patch, prop, attr);
     },
 
-    deleteProperty(target, prop) {
+    deleteProperty (target, prop) {
         const meta = internals.get(target);
         meta.deletions.add(String(prop));
         meta.additions.delete(String(prop));
@@ -49,12 +51,12 @@ const ObjectHandler = {
 
     has (target, prop) {
         const meta = internals.get(target);
-        return !meta.deletions.has(String(prop)) && (meta.additions.has(String(prop)) || Reflect.has(meta.target));
+        return !meta.deletions.has(String(prop)) && (meta.additions.has(String(prop)) || Reflect.has(meta.target, prop));
     },
 
     getOwnPropertyDescriptor (target, prop) {
         const meta = internals.get(target);
-        if (meta.deletions.has(String(prop)) || [ Sym, SymMeta ].includes(prop)) return void 0;
+        if (meta.deletions.has(String(prop)) || [ Sym, SymMeta ].includes(prop)) return nil;
 
         const desc = Reflect.has(meta.patch, prop)
             ? Reflect.getOwnPropertyDescriptor(meta.patch, prop)
@@ -62,16 +64,16 @@ const ObjectHandler = {
 
         return desc && !meta.deletions.has(String(prop))
             ? { ...desc, writable: true, configurable: true }
-            : void 0;
+            : nil;
     },
 
     get (target, prop, receiver) {
         if (prop === Sym) return true;
         const meta = internals.get(target);
         if (prop === SymMeta) return meta;
-        if (meta.deletions.has(String(prop))) return void 0;
+        if (meta.deletions.has(String(prop))) return nil;
 
-        if (!(meta.additions.has(String(prop)) || meta.deletions.has(String(prop))) && meta.givenKeys.includes(prop)) {
+        if (!meta.touched(prop) && meta.givenKeys.includes(prop)) {
             meta.additions.add(String(prop));
             meta.deletions.delete(String(prop));
             meta.patch[prop] = mediary(meta.target[prop]);
@@ -108,12 +110,15 @@ function mediary(given) {
     const meta = {
         target: given,
         patch,
-        givenKeys: Reflect.ownKeys(given),
+        givenKeys: Object.getOwnPropertyNames(given),
         additions: new Set(),
         deletions: new Set(),
+        touched(prop) {
+            return this.additions.has(String(prop)) || this.deletions.has(String(prop));
+        },
         ownKeys() {
             return new Set([
-                ...this.givenKeys.filter(k => !this.deletions.has(k)),
+                ...this.givenKeys.filter(k => !this.deletions.has(String(k))),
                 ...this.additions
             ]);
         }
@@ -124,17 +129,28 @@ function mediary(given) {
     return new Proxy(key, ObjectHandler);
 }
 
-const clone = x => Array.isArray(x)
-    ? x.map(clone)
-    : x != null && typeof x === 'object'
-        ? Object.entries(x).reduce((a, [k, v]) => (a[k] = clone(v), a), {})
-        : x;
-
 function realize(given) {
     if (given == null
         || typeof given !== 'object'
         || !given[Sym]) return given;
-    return clone(given);
+
+    let result;
+
+    if (Array.isArray(given)) {
+        result = [];
+        let i = given.length;
+        while (i-- > 0) result[i] = realize(given[i]);
+    } else {
+        result = {};
+        let keys = Object.getOwnPropertyNames(given);
+        let i = keys.length;
+        while (i-- > 0) {
+            result[keys[i]] = given[SymMeta].touched(keys[i])
+                ? realize(given[keys[i]])
+                : result[keys[i]] = given[SymMeta].target[keys[i]];
+        }
+    }
+    return result;
 }
 
 exports.realize = realize;
