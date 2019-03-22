@@ -51,18 +51,18 @@ const ObjectHandler = {
 
     has (target, prop) {
         const meta = internals.get(target);
-        return !meta.deletions.has(String(prop)) && (meta.additions.has(String(prop)) || Reflect.has(meta.target, prop));
+        return !meta.deletions.has(prop) && (meta.additions.has(prop) || Reflect.has(meta.target, prop));
     },
 
     getOwnPropertyDescriptor (target, prop) {
         const meta = internals.get(target);
-        if (meta.deletions.has(String(prop)) || [ Sym, SymMeta ].includes(prop)) return nil;
+        if (meta.deletions.has(prop) || [ Sym, SymMeta ].includes(prop)) return nil;
 
         const desc = Reflect.has(meta.patch, prop)
             ? Reflect.getOwnPropertyDescriptor(meta.patch, prop)
             : Reflect.getOwnPropertyDescriptor(meta.target, prop);
 
-        return desc && !meta.deletions.has(String(prop))
+        return desc && !meta.deletions.has(prop)
             ? { ...desc, writable: true, configurable: true }
             : nil;
     },
@@ -71,7 +71,7 @@ const ObjectHandler = {
         if (prop === Sym) return true;
         const meta = internals.get(target);
         if (prop === SymMeta) return meta;
-        if (meta.deletions.has(String(prop))) return nil;
+        if (meta.deletions.has(prop)) return nil;
 
         if (!meta.touched(prop) && meta.givenKeys.includes(prop)) {
             meta.additions.add(String(prop));
@@ -94,6 +94,17 @@ const ObjectHandler = {
     }
 };
 
+function touched(prop) {
+    return this.additions.has(prop) || this.deletions.has(prop);
+}
+
+function ownKeys() {
+    return new Set([
+        ...this.givenKeys.filter(k => !this.deletions.has(k)),
+        ...this.additions
+    ]);
+}
+
 function mediary(given) {
     if (given == null
         || typeof given !== 'object'
@@ -113,15 +124,8 @@ function mediary(given) {
         givenKeys: Object.getOwnPropertyNames(given),
         additions: new Set(),
         deletions: new Set(),
-        touched(prop) {
-            return this.additions.has(String(prop)) || this.deletions.has(String(prop));
-        },
-        ownKeys() {
-            return new Set([
-                ...this.givenKeys.filter(k => !this.deletions.has(String(k))),
-                ...this.additions
-            ]);
-        }
+        touched,
+        ownKeys
     };
 
     const key = {};
@@ -142,12 +146,12 @@ function realize(given) {
         while (i-- > 0) result[i] = realize(given[i]);
     } else {
         result = {};
+        let meta = given[SymMeta];
         let keys = Object.getOwnPropertyNames(given);
         let i = keys.length;
         while (i-- > 0) {
-            result[keys[i]] = given[SymMeta].touched(keys[i])
-                ? realize(given[keys[i]])
-                : result[keys[i]] = given[SymMeta].target[keys[i]];
+            let prop = keys[i];
+            if (meta.additions.has(prop)) result[prop] = realize(given[prop]);
         }
     }
     return result;
@@ -160,10 +164,7 @@ exports.Sym = Sym;
 exports.SymMeta = SymMeta;
 
 // `produce` is a drop-in replacement for immer `produce`. This function
-// is here to provide a possible migration path. Note that `produce`
-// returns a mediary object, unlike immer's `produce` which returns a
-// plain old javascript object. With mediary there is no need to
-// ever "realize" the object.
+// is here to provide a possible migration path.
 exports.produce = (given, fn) => {
     const cloned = mediary(realize(given));
     fn(cloned);
