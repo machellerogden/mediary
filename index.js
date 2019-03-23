@@ -73,7 +73,7 @@ const ObjectHandler = {
         if (prop === SymMeta) return meta;
         if (meta.deletions.has(prop)) return nil;
 
-        if (!meta.touched(prop) && meta.givenKeys.includes(prop)) {
+        if (!(meta.additions.has(prop) || meta.deletions.has(prop)) && meta.givenKeys.includes(prop)) {
             meta.additions.add(prop);
             meta.deletions.delete(prop);
             return meta.patch[prop] = mediary(meta.target[prop]);
@@ -91,10 +91,6 @@ const ObjectHandler = {
         return Reflect.set(meta.patch, prop, value);
     }
 };
-
-function touched(prop) {
-    return this.additions.has(prop) || this.deletions.has(prop);
-}
 
 function ownKeys() {
     return new Set([
@@ -122,7 +118,6 @@ function mediary(given) {
         givenKeys: Object.getOwnPropertyNames(given),
         additions: new Set(),
         deletions: new Set(),
-        touched,
         ownKeys
     };
 
