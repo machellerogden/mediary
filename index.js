@@ -151,7 +151,11 @@ function realize(given) {
         let i = keys.length;
         while (i-- > 0) {
             let prop = keys[i];
-            if (meta.additions.has(prop)) result[prop] = realize(given[prop]);
+            if (meta.additions.has(prop)) {
+                result[prop] = realize(given[prop]);
+            } else {
+                result[prop] = meta.target[prop];
+            }
         }
     }
     return result;
