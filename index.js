@@ -74,9 +74,9 @@ const ObjectHandler = {
         if (meta.deletions.has(prop)) return nil;
 
         if (!meta.touched(prop) && meta.givenKeys.includes(prop)) {
-            meta.additions.add(String(prop));
-            meta.deletions.delete(String(prop));
-            meta.patch[prop] = mediary(meta.target[prop]);
+            meta.additions.add(prop);
+            meta.deletions.delete(prop);
+            return meta.patch[prop] = mediary(meta.target[prop]);
         }
 
         const value = Reflect.has(meta.patch, prop)
