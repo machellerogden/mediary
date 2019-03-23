@@ -72,16 +72,12 @@ const ObjectHandler = {
         const meta = internals.get(target);
         if (prop === SymMeta) return meta;
         if (meta.deletions.has(prop)) return nil;
-
-        if (!(meta.additions.has(prop) || meta.deletions.has(prop)) && meta.givenKeys.includes(prop)) {
-            meta.additions.add(prop);
-            meta.deletions.delete(prop);
+        if (meta.additions.has(prop)) return Reflect.get(meta.patch, prop);
+        if (meta.givenKeys.includes(prop)) {
+            meta.additions.add(String(prop)); // shouldn't need this
             return meta.patch[prop] = mediary(meta.target[prop]);
         }
-
-        return Reflect.has(meta.patch, prop)
-            ? Reflect.get(meta.patch, prop)
-            : Reflect.get(meta.target, prop);
+        return Reflect.get(meta.target, prop);
     },
 
     set (target, prop, value, receiver) {
