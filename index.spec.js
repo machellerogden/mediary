@@ -1,7 +1,7 @@
 'use strict';
 
 import test from 'ava';
-import { clone, realize, Sym, SymMeta } from '.';
+import { clone, Sym, SymMeta } from '.';
 
 test('basics shallow', t => {
     const foo = {
@@ -294,10 +294,10 @@ test('delete deep', t => {
     t.deepEqual(bar, { a: 'a', b: { c: { } } });
     t.true(bar.b.c[SymMeta].deletions.has('d'));
     t.deepEqual(bar.b.c[SymMeta].patch, {});
-    bar.b.c.a = "a";
+    bar.b.c.a = 'a';
     t.true(bar.b.c[SymMeta].additions.has('a'));
     t.false(bar.b.c[SymMeta].deletions.has('a'));
-    t.deepEqual(bar.b.c[SymMeta].patch, { a: "a" });
+    t.deepEqual(bar.b.c[SymMeta].patch, { a: 'a' });
     delete bar.b.c.a;
     t.true(bar.b.c[SymMeta].deletions.has('a'));
     t.deepEqual(bar.b.c[SymMeta].patch, {});
@@ -636,8 +636,8 @@ test('forEach', t => {
 // TODO forEach - test deep
 
 test('includes', t => {
-    const a = { a: "a" };
-    const b = { b: "b" };
+    const a = { a: 'a' };
+    const b = { b: 'b' };
     const foo = [ 1, 2, a, [ 4 , b ] ];
     const bar = clone(foo);
     t.is(false, bar.includes(a));
@@ -655,7 +655,7 @@ test('includes', t => {
 });
 
 test('indexOf', t => {
-    const a = { b: "b" };
+    const a = { b: 'b' };
     const foo = [ 1, 2, a, 4, 5 ];
     const bar = clone(foo);
     t.is(-1, bar.indexOf(a));
@@ -664,11 +664,11 @@ test('indexOf', t => {
     bar[0] = 2;
     t.is(-1, bar.indexOf(1));
     t.is(0, bar.indexOf(2));
-    t.is(-1, bar.indexOf({ b: "b" }));
+    t.is(-1, bar.indexOf({ b: 'b' }));
 });
 
 test('lastIndexOf', t => {
-    const a = { b: "b" };
+    const a = { b: 'b' };
     const foo = [ 1, 2, a, 4, 4 ];
     const bar = clone(foo);
     t.is(4, bar.lastIndexOf(4));
@@ -678,7 +678,7 @@ test('lastIndexOf', t => {
     bar[0] = 2;
     t.is(-1, bar.lastIndexOf(1));
     t.is(1, bar.lastIndexOf(2));
-    t.is(-1, bar.lastIndexOf({ b: "b" }));
+    t.is(-1, bar.lastIndexOf({ b: 'b' }));
 });
 
 test('join', t => {
@@ -744,39 +744,31 @@ test('toString shallow', t => {
 });
 
 
-test('realize basics shallow', t => {
-    const foo = {
-        a: 'b'
-    };
-    const bar = realize(clone(foo));
-    bar.a = 'c';
-    bar.b = 'd';
-    t.is(foo.a, 'b');
-    t.is(foo.b, void 0);
-    t.is(bar.a, 'c');
-    t.is(bar.b, 'd');
+test('clones share structure', t => {
+    const foo = { a: { b: 'b' }, c: { d: 'd' } };
+    const bar = clone(foo);
+    const qux = clone(bar);
+    t.is(foo.a, bar[SymMeta].target.a);
+    t.is(foo.b, bar[SymMeta].target.b);
+    t.is(bar[SymMeta].target.a, qux[SymMeta].target.a);
+    t.is(bar[SymMeta].target.b, qux[SymMeta].target.b);
 });
 
-//test('realize basics deep', t => {
-    //const foo = {
-        //a: {
-            //b: [
-                //{
-                    //c: 'd'
-                //}
-            //],
-            //e: 'f'
-        //}
-    //};
-    //const bar = realize(clone(foo));
-    //bar.a.b[0].c = 'z';
-    //bar.a.e = 'z';
-    //t.is(foo.a.b[0].c, 'd');
-    //t.is(bar.a.b[0].c, 'z');
-    //t.is(foo.a.e, 'f');
-    //t.is(bar.a.e, 'z');
-    ////t.is(bar[Sym], void 0);
-    ////t.is(bar.a[Sym], void 0);
-    ////t.is(bar.a.b[Sym], void 0);
-    ////t.is(bar.a.b[0][Sym], void 0);
-//});
+test('works', t => {
+    const foo = { a: 'a', b: { c: [ 'c', 'c', { d: [ { e: 123, f: true, g: void 0 } ] } ] }, h: { i: 'i' } };
+    const bar = clone(foo);
+
+    bar.b.c[2].d[0].e = 'e';
+
+    const qux = clone(bar);
+
+    t.is(foo.h, bar[SymMeta].target.h);
+    t.is(bar[SymMeta].target.h, qux[SymMeta].target.h);
+
+    t.deepEqual(foo, { a: 'a', b: { c: [ 'c', 'c', { d: [ { e: 123, f: true, g: void 0 } ] } ] }, h: { i: 'i' } });
+    t.deepEqual(bar, { a: 'a', b: { c: [ 'c', 'c', { d: [ { e: 'e', f: true, g: void 0 } ] } ] }, h: { i: 'i' } });
+
+    qux.h.i = { j: "j" };
+
+    t.deepEqual(qux, { a: 'a', b: { c: [ 'c', 'c', { d: [ { e: 'e', f: true, g: void 0 } ] } ] }, h: { i: { j: 'j' } } });
+});

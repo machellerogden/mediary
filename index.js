@@ -51,7 +51,8 @@ const ObjectHandler = {
 
     has (target, prop) {
         const meta = internals.get(target);
-        return !meta.deletions.has(prop) && (meta.additions.has(prop) || Reflect.has(meta.target, prop));
+        if (meta.deletions.has(prop)) return false;
+        return meta.additions.has(prop) || Reflect.has(meta.target, prop);
     },
 
     getOwnPropertyDescriptor (target, prop) {
@@ -73,17 +74,18 @@ const ObjectHandler = {
         if (prop === SymMeta) return meta;
         if (meta.deletions.has(prop)) return nil;
 
-        if (!meta.touched(prop) && meta.givenKeys.includes(prop)) {
-            meta.additions.add(String(prop));
-            meta.deletions.delete(String(prop));
-            meta.patch[prop] = mediary(meta.target[prop]);
+        if (meta.accessed.has(prop)) {
+            return Reflect.has(meta.patch, prop)
+                ? Reflect.get(meta.patch, prop)
+                : Reflect.get(meta.target, prop);
         }
 
-        const value = Reflect.has(meta.patch, prop)
-            ? Reflect.get(meta.patch, prop)
-            : Reflect.get(meta.target, prop);
-
-        return value;
+        if (meta.givenKeys.includes(prop)) {
+            meta.accessed.add(prop);
+            return meta.patch[prop] = mediary(meta.target[prop]);
+        } else {
+            return nil;
+        }
     },
 
     set (target, prop, value, receiver) {
@@ -93,10 +95,6 @@ const ObjectHandler = {
         return Reflect.set(meta.patch, prop, value);
     }
 };
-
-function touched(prop) {
-    return this.additions.has(prop) || this.deletions.has(prop);
-}
 
 function ownKeys() {
     return new Set([
@@ -124,7 +122,7 @@ function mediary(given) {
         givenKeys: Object.getOwnPropertyNames(given),
         additions: new Set(),
         deletions: new Set(),
-        touched,
+        accessed: new Set(),
         ownKeys
     };
 
@@ -151,11 +149,10 @@ function realize(given) {
         let i = keys.length;
         while (i-- > 0) {
             let prop = keys[i];
-            if (meta.additions.has(prop)) {
-                result[prop] = realize(given[prop]);
-            } else {
-                result[prop] = meta.target[prop];
-            }
+            if (meta.deletions.has(prop)) continue;
+            result[prop] = meta.additions.has(prop)
+                ? realize(meta.patch[prop])
+                : meta.target[prop];
         }
     }
     return result;
