@@ -33,6 +33,7 @@ const ObjectHandler = {
 
     defineProperty (target, prop, attr) {
         const meta = internals.get(target);
+        meta.modifications.add(String(prop));
         meta.additions.add(String(prop));
         meta.deletions.delete(String(prop));
         return Reflect.defineProperty(meta.patch, prop, attr);
@@ -40,6 +41,7 @@ const ObjectHandler = {
 
     deleteProperty (target, prop) {
         const meta = internals.get(target);
+        meta.modifications.add(String(prop));
         meta.deletions.add(String(prop));
         meta.additions.delete(String(prop));
         return Reflect.deleteProperty(meta.patch, prop);
@@ -82,6 +84,7 @@ const ObjectHandler = {
 
     set (target, prop, value, receiver) {
         const meta = internals.get(target);
+        meta.modifications.add(String(prop));
         meta.additions.add(String(prop));
         meta.deletions.delete(String(prop));
         return Reflect.set(meta.patch, prop, value);
@@ -112,6 +115,7 @@ function mediary(given) {
         target: given,
         patch,
         givenKeys: Object.getOwnPropertyNames(given),
+        modifications: new Set(),
         additions: new Set(),
         deletions: new Set(),
         ownKeys
@@ -140,7 +144,7 @@ function realize(given) {
         let i = keys.length;
         while (i-- > 0) {
             let prop = keys[i];
-            if (meta.additions.has(prop)) {
+            if (meta.modifications.has(prop)) {
                 result[prop] = realize(given[prop]);
             } else {
                 result[prop] = meta.target[prop];
