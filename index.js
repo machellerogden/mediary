@@ -79,11 +79,9 @@ const ObjectHandler = {
             return meta.patch[prop] = mediary(meta.target[prop]);
         }
 
-        const value = Reflect.has(meta.patch, prop)
+        return Reflect.has(meta.patch, prop)
             ? Reflect.get(meta.patch, prop)
             : Reflect.get(meta.target, prop);
-
-        return value;
     },
 
     set (target, prop, value, receiver) {
