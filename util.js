@@ -1,9 +1,5 @@
 'use strict';
 
-exports.reduce = (a, fn, s) => Array.isArray(a)
-    ? a.reduce(fn, s || [])
-    : Object.entries(a).reduce((acc, [ k, v ], i, o) => fn(acc, v, k, o), s || {});
-
 const numberTypes = new Set(['string', 'number']);
 
 exports.isNumber = n => numberTypes.has(typeof n) && !isNaN(parseInt(n, 10)) && isFinite(n);

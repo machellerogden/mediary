@@ -6,7 +6,6 @@ const {
 } = require('./Sym');
 
 const {
-    reduce,
     deepFreeze,
     isNumber
 } = require('./util');
@@ -32,8 +31,8 @@ const internals = new WeakMap();
 const ObjectHandler = {
 
     defineProperty (target, prop, attr) {
-        var meta = internals.get(target);
-        addProp(meta, prop);
+        const meta = internals.get(target);
+        addPatch(meta, prop);
         return Reflect.defineProperty(meta.patch, prop, attr);
     },
 
@@ -47,7 +46,7 @@ const ObjectHandler = {
 
     deleteProperty (target, prop) {
         const meta = internals.get(target);
-        rmProp(meta, prop);
+        rmPatch(meta, prop);
         return Reflect.deleteProperty(meta.patch, prop);
     },
 
@@ -57,7 +56,7 @@ const ObjectHandler = {
 
     has (target, prop) {
         const meta = internals.get(target);
-        return !meta.deleted.has(prop) && (meta.patched.has(prop) || Reflect.has(meta.target, prop));
+        return !meta.deleted.has(prop) && (meta.patchProps.has(prop) || Reflect.has(meta.target, prop));
     },
 
     getOwnPropertyDescriptor (target, prop) {
@@ -78,9 +77,9 @@ const ObjectHandler = {
         const meta = internals.get(target);
         if (prop === SymMeta) return meta;
         if (meta.deleted.has(prop)) return nil;
-        if (meta.patched.has(prop)) return Reflect.get(meta.patch, prop);
-        if (meta.givenKeys.has(prop)) {
-            meta.patched.add(prop);
+        if (meta.patchProps.has(prop)) return Reflect.get(meta.patch, prop);
+        if (meta.givenProps.has(prop)) {
+            meta.patchProps.add(prop);
             return meta.patch[prop] = mediary(meta.target[prop]);
         }
         return Reflect.get(meta.target, prop);
@@ -88,23 +87,23 @@ const ObjectHandler = {
 
     set (target, prop, value, receiver) {
         const meta = internals.get(target);
-        addProp(meta, prop);
+        addPatch(meta, prop);
         return Reflect.set(meta.patch, prop, value);
     }
 };
 
-function addProp(meta, prop) {
+function addPatch(meta, prop) {
     meta.keys.add(prop);
     meta.modified.add(prop);
-    meta.patched.add(prop);
+    meta.patchProps.add(prop);
     meta.deleted.delete(prop);
 }
 
-function rmProp(meta, prop) {
+function rmPatch(meta, prop) {
     meta.keys.delete(prop);
     meta.modified.add(prop);
     meta.deleted.add(prop);
-    meta.patched.delete(prop);
+    meta.patchProps.delete(prop);
 }
 
 function mediary(given) {
@@ -118,18 +117,18 @@ function mediary(given) {
 
     validateObject(given);
 
-    var givenKeys = Object.getOwnPropertyNames(given);
+    const givenProps = Object.getOwnPropertyNames(given);
 
-    var key = {};
+    const key = {};
 
     internals.set(key, {
         target: given,
-        givenKeys: new Set(givenKeys),
+        givenProps: new Set(givenProps),
 
         patch: {},
-        keys: new Set(givenKeys),
+        keys: new Set(givenProps),
         modified: new Set(),
-        patched: new Set(),
+        patchProps: new Set(),
         deleted: new Set()
     });
 
@@ -147,6 +146,7 @@ function realize(given) {
         result = [];
         let i = given.length;
         while (i-- > 0) result[i] = realize(given[i]);
+
     } else {
         result = {};
         let meta = given[SymMeta];
