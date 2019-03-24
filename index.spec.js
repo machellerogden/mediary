@@ -14,8 +14,8 @@ test('basics shallow', t => {
     t.is(foo.b, void 0);
     t.is(bar.a, 'c');
     t.is(bar.b, 'd');
-    t.true(bar[SymMeta].additions.has('a'));
-    t.true(bar[SymMeta].additions.has('b'));
+    t.true(bar[SymMeta].patched.has('a'));
+    t.true(bar[SymMeta].patched.has('b'));
     t.deepEqual(bar[SymMeta].patch, { a: 'c', b: 'd' });
 });
 
@@ -37,8 +37,8 @@ test('basics deep', t => {
     t.is(bar.a.b[0].c, 'z');
     t.is(foo.a.e, 'f');
     t.is(bar.a.e, 'z');
-    t.true(bar.a.b[0][SymMeta].additions.has('c'));
-    t.true(bar.a[SymMeta].additions.has('e'));
+    t.true(bar.a.b[0][SymMeta].patched.has('c'));
+    t.true(bar.a[SymMeta].patched.has('e'));
     t.deepEqual(bar.a.b[0][SymMeta].patch, { c: 'z' });
     t.deepEqual(bar.a[SymMeta].patch, { b: [ { c: 'z' } ], e: 'z' });
 });
@@ -56,7 +56,7 @@ test('spread 1', t => {
     t.deepEqual(foo.a, { b: 'b', c: 'c' });
     t.deepEqual(bar.a, { b: 'b', c: 'c', d: 'd' });
     t.deepEqual(foo, { a: { b: 'b', c: 'c' } });
-    t.true(bar[SymMeta].additions.has('a'));
+    t.true(bar[SymMeta].patched.has('a'));
     t.deepEqual(bar[SymMeta].patch, { a: { b: 'b', c: 'c', d: 'd' } });
 });
 
@@ -74,7 +74,7 @@ test('spread 2', t => {
     t.deepEqual(foo.a.c, { d: 'd' });
     t.deepEqual(bar.a.c, { d: 'd', e: 'e' });
     t.deepEqual(foo, { a: { b: 'b', c: { d: 'd' } } });
-    t.true(bar.a[SymMeta].additions.has('c'));
+    t.true(bar.a[SymMeta].patched.has('c'));
     t.deepEqual(bar.a[SymMeta].patch, { c: { d: 'd', e: 'e' } });
 });
 
@@ -92,7 +92,7 @@ test('spread 3', t => {
     t.deepEqual(foo.a.c, [ 'd' ]);
     t.deepEqual(bar.a.c, [ 'd', 'e' ]);
     t.deepEqual(foo, { a: { b: 'b', c: [ 'd' ] } });
-    t.true(bar.a[SymMeta].additions.has('c'));
+    t.true(bar.a[SymMeta].patched.has('c'));
     t.deepEqual(bar.a[SymMeta].patch, { c: [ 'd', 'e' ] });
 });
 
@@ -127,7 +127,7 @@ test('set an array', t => {
     const bar = clone(foo);
     bar.c = [ 'c', 'd' ];
     t.deepEqual(bar.c, [ 'c', 'd' ]);
-    t.true(bar[SymMeta].additions.has('c'));
+    t.true(bar[SymMeta].patched.has('c'));
     t.deepEqual(bar[SymMeta].patch, { c: [ 'c', 'd' ] });
 });
 
@@ -141,7 +141,7 @@ test('base array', t => {
     bar[0].a = 'b';
     t.deepEqual(foo[0].a, 'a');
     t.deepEqual(bar[0].a, 'b');
-    t.true(bar[0][SymMeta].additions.has('a'));
+    t.true(bar[0][SymMeta].patched.has('a'));
     t.deepEqual(bar[0][SymMeta].patch, { a: 'b' });
 });
 
@@ -201,7 +201,7 @@ test('base array 2', t => {
     t.true(bar[0][Sym]);
     bar[0].a = 'b';
     t.deepEqual(bar[0][SymMeta].patch, { a: 'b' });
-    t.true(bar[0][SymMeta].additions.has('a'));
+    t.true(bar[0][SymMeta].patched.has('a'));
     t.true(bar[1][0][Sym]);
     t.true(bar[1][1][Sym]);
 });
@@ -275,7 +275,7 @@ test('delete shallow', t => {
     delete bar.b;
     t.deepEqual(foo, { a: 'a', b: 'b' });
     t.deepEqual(bar, { a: 'a' });
-    t.true(bar[SymMeta].deletions.has('b'));
+    t.true(bar[SymMeta].deleted.has('b'));
     t.deepEqual(bar[SymMeta].patch, { a: 'a' });
 });
 
@@ -292,14 +292,14 @@ test('delete deep', t => {
     delete bar.b.c.d;
     t.deepEqual(foo, { a: 'a', b: { c: { d: 'd' } } });
     t.deepEqual(bar, { a: 'a', b: { c: { } } });
-    t.true(bar.b.c[SymMeta].deletions.has('d'));
+    t.true(bar.b.c[SymMeta].deleted.has('d'));
     t.deepEqual(bar.b.c[SymMeta].patch, {});
     bar.b.c.a = "a";
-    t.true(bar.b.c[SymMeta].additions.has('a'));
-    t.false(bar.b.c[SymMeta].deletions.has('a'));
+    t.true(bar.b.c[SymMeta].patched.has('a'));
+    t.false(bar.b.c[SymMeta].deleted.has('a'));
     t.deepEqual(bar.b.c[SymMeta].patch, { a: "a" });
     delete bar.b.c.a;
-    t.true(bar.b.c[SymMeta].deletions.has('a'));
+    t.true(bar.b.c[SymMeta].deleted.has('a'));
     t.deepEqual(bar.b.c[SymMeta].patch, {});
 });
 
