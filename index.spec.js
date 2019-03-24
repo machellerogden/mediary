@@ -208,17 +208,17 @@ test('base array 2', t => {
 
 test('base array 3', t => {
     const foo = [
-        {
-            a: 'a'
-        }
+        { a: 'a' }
     ];
     const bar = clone(foo);
     bar.push({ b: 'b' });
+    t.deepEqual(foo, [
+        { a: 'a' }
+    ]);
     t.deepEqual(bar, [
         { a: 'a' },
         { b: 'b' }
     ]);
-    // TODO
     t.true(bar[1][Sym]);
 });
 
@@ -744,45 +744,8 @@ test('toString shallow', t => {
 });
 
 
-//test('realize basics shallow', t => {
-    //const foo = {
-        //a: 'b'
-    //};
-    //const bar = realize(clone(foo));
-    //bar.a = 'c';
-    //bar.b = 'd';
-    //t.is(foo.a, 'b');
-    //t.is(foo.b, void 0);
-    //t.is(bar.a, 'c');
-    //t.is(bar.b, 'd');
-//});
-
-//test('realize basics deep', t => {
-    //const foo = {
-        //a: {
-            //b: [
-                //{
-                    //c: 'd'
-                //}
-            //],
-            //e: 'f'
-        //}
-    //};
-    //const bar = realize(clone(foo));
-    //bar.a.b[0].c = 'z';
-    //bar.a.e = 'z';
-    //t.is(foo.a.b[0].c, 'd');
-    //t.is(bar.a.b[0].c, 'z');
-    //t.is(foo.a.e, 'f');
-    //t.is(bar.a.e, 'z');
-    ////t.is(bar[Sym], void 0);
-    ////t.is(bar.a[Sym], void 0);
-    ////t.is(bar.a.b[Sym], void 0);
-    ////t.is(bar.a.b[0][Sym], void 0);
-//});
-
-
-test('clone clone clone clone', t => {
+// internals
+test('cloning clones 1', t => {
     const foo = { a: { b: [ { c: { d: 'd' } } ] } };
     const bar = clone(foo);
     const baz = clone(bar);
@@ -805,9 +768,21 @@ test('clone clone clone clone', t => {
     t.deepEqual(foo.a, bar.a);
     t.deepEqual(bar.a, baz.a);
     t.deepEqual(baz.a, qux.a);
+});
+
+test('cloning clones 2', t => {
+    const foo = { a: { b: [ { c: { d: 'd' } } ] } };
+    const bar = clone(foo);
+    const baz = clone(bar);
+    const qux = clone(baz);
+    bar.e = 'e';
+    baz.f = 'f';
+    qux.g = 'g';
+    t.deepEqual(foo.a, bar.a);
+    t.deepEqual(bar.a, baz.a);
+    t.deepEqual(baz.a, qux.a);
     const xyzzy = clone(qux);
-    t.deepEqual(qux, xyzzy);
     xyzzy.h = 'h';
-    // t.deepEqual(xyzzy[SymMeta].patch, { g: 'g', h: 'h' }); // TODO: `a` shouldn't need to be patched at this point
+    t.deepEqual(xyzzy[SymMeta].patch, { h: 'h' });
     t.deepEqual(foo.a, xyzzy.a);
 });

@@ -76,7 +76,7 @@ const ObjectHandler = {
         if (meta.deletions.has(prop)) return nil;
         if (meta.additions.has(prop)) return Reflect.get(meta.patch, prop);
         if (meta.givenKeys.includes(prop)) {
-            meta.additions.add(String(prop)); // shouldn't need this
+            meta.additions.add(String(prop));
             return meta.patch[prop] = mediary(meta.target[prop]);
         }
         return Reflect.get(meta.target, prop);
@@ -160,8 +160,8 @@ exports.mediary = mediary;
 exports.Sym = Sym;
 exports.SymMeta = SymMeta;
 
-// `produce` is a drop-in replacement for immer `produce`. This function
-// is here to provide a possible migration path.
+// `produce` is a drop-in replacement for immer `produce`.
+// This function provides a possible migration path.
 exports.produce = (given, fn) => {
     const cloned = mediary(realize(given));
     fn(cloned);
