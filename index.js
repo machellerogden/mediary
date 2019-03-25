@@ -51,23 +51,23 @@ const ObjectHandler = {
     },
 
     ownKeys (target) {
-        return [ ...internals.get(target).keys ];
+        return [ ...internals.get(target).props ];
     },
 
     has (target, prop) {
         const meta = internals.get(target);
-        return !meta.deleted.has(prop) && (meta.patchProps.has(prop) || Reflect.has(meta.target, prop));
+        return !meta.deletedProps.has(prop) && (meta.patchedProps.has(prop) || Reflect.has(meta.target, prop));
     },
 
     getOwnPropertyDescriptor (target, prop) {
         const meta = internals.get(target);
-        if (meta.deleted.has(prop) || [ Sym, SymMeta ].includes(prop)) return nil;
+        if (meta.deletedProps.has(prop) || [ Sym, SymMeta ].includes(prop)) return nil;
 
         const desc = Reflect.has(meta.patch, prop)
             ? Reflect.getOwnPropertyDescriptor(meta.patch, prop)
             : Reflect.getOwnPropertyDescriptor(meta.target, prop);
 
-        return desc && !meta.deleted.has(prop)
+        return desc && !meta.deletedProps.has(prop)
             ? { ...desc, writable: true, configurable: true }
             : nil;
     },
@@ -76,10 +76,10 @@ const ObjectHandler = {
         if (prop === Sym) return true;
         const meta = internals.get(target);
         if (prop === SymMeta) return meta;
-        if (meta.deleted.has(prop)) return nil;
-        if (meta.patchProps.has(prop)) return Reflect.get(meta.patch, prop);
+        if (meta.deletedProps.has(prop)) return nil;
+        if (meta.patchedProps.has(prop)) return Reflect.get(meta.patch, prop);
         if (meta.givenProps.has(prop)) {
-            meta.patchProps.add(prop);
+            meta.patchedProps.add(prop);
             return meta.patch[prop] = mediary(meta.target[prop]);
         }
         return Reflect.get(meta.target, prop);
@@ -93,17 +93,17 @@ const ObjectHandler = {
 };
 
 function addPatch(meta, prop) {
-    meta.keys.add(prop);
-    meta.modified.add(prop);
-    meta.patchProps.add(prop);
-    meta.deleted.delete(prop);
+    meta.props.add(prop);
+    meta.modifiedProps.add(prop);
+    meta.patchedProps.add(prop);
+    meta.deletedProps.delete(prop);
 }
 
 function rmPatch(meta, prop) {
-    meta.keys.delete(prop);
-    meta.modified.add(prop);
-    meta.deleted.add(prop);
-    meta.patchProps.delete(prop);
+    meta.props.delete(prop);
+    meta.modifiedProps.add(prop);
+    meta.deletedProps.add(prop);
+    meta.patchedProps.delete(prop);
 }
 
 function mediary(given) {
@@ -126,10 +126,10 @@ function mediary(given) {
         givenProps: new Set(givenProps),
 
         patch: {},
-        keys: new Set(givenProps),
-        modified: new Set(),
-        patchProps: new Set(),
-        deleted: new Set()
+        props: new Set(givenProps),
+        modifiedProps: new Set(),
+        patchedProps: new Set(),
+        deletedProps: new Set()
     });
 
     return new Proxy(key, ObjectHandler);
@@ -154,7 +154,7 @@ function realize(given) {
         let i = keys.length;
         while (i-- > 0) {
             let prop = keys[i];
-            if (meta.modified.has(prop)) {
+            if (meta.modifiedProps.has(prop)) {
                 result[prop] = realize(given[prop]);
             } else {
                 result[prop] = meta.target[prop];
