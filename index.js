@@ -26,41 +26,35 @@ function validateObject(given) {
     }
 }
 
-const internals = new WeakMap();
-
 const ObjectHandler = {
 
-    defineProperty (target, prop, attr) {
-        const meta = internals.get(target);
+    defineProperty (meta, prop, attr) {
         addPatch(meta, prop);
         return Reflect.defineProperty(meta.patch, prop, attr);
     },
 
-    getPrototypeOf (target) {
-        return Reflect.getPrototypeOf(internals.get(target).patch);
+    getPrototypeOf (meta) {
+        return Reflect.getPrototypeOf(meta.patch);
     },
 
-    setPrototypeOf (target) {
-        return Reflect.setPrototypeOf(internals.get(target).patch);
+    setPrototypeOf (meta) {
+        return Reflect.setPrototypeOf(meta.patch);
     },
 
-    deleteProperty (target, prop) {
-        const meta = internals.get(target);
+    deleteProperty (meta, prop) {
         rmPatch(meta, prop);
         return Reflect.deleteProperty(meta.patch, prop);
     },
 
-    ownKeys (target) {
-        return [ ...internals.get(target).props ];
+    ownKeys (meta) {
+        return [ ...meta.props ];
     },
 
-    has (target, prop) {
-        const meta = internals.get(target);
+    has (meta, prop) {
         return !meta.deletedProps.has(prop) && (meta.patchedProps.has(prop) || Reflect.has(meta.target, prop));
     },
 
-    getOwnPropertyDescriptor (target, prop) {
-        const meta = internals.get(target);
+    getOwnPropertyDescriptor (meta, prop) {
         if (meta.deletedProps.has(prop) || [ Sym, SymMeta ].includes(prop)) return nil;
 
         const desc = Reflect.has(meta.patch, prop)
@@ -72,9 +66,8 @@ const ObjectHandler = {
             : nil;
     },
 
-    get (target, prop, receiver) {
+    get (meta, prop, receiver) {
         if (prop === Sym) return true;
-        const meta = internals.get(target);
         if (prop === SymMeta) return meta;
         if (meta.deletedProps.has(prop)) return nil;
         if (meta.patchedProps.has(prop)) return Reflect.get(meta.patch, prop);
@@ -85,8 +78,7 @@ const ObjectHandler = {
         return Reflect.get(meta.target, prop);
     },
 
-    set (target, prop, value, receiver) {
-        const meta = internals.get(target);
+    set (meta, prop, value, receiver) {
         addPatch(meta, prop);
         return Reflect.set(meta.patch, prop, value);
     }
@@ -119,9 +111,7 @@ function mediary(given) {
 
     const givenProps = Object.getOwnPropertyNames(given);
 
-    const key = {};
-
-    internals.set(key, {
+    const meta = {
         target: given,
         givenProps: new Set(givenProps),
 
@@ -130,9 +120,9 @@ function mediary(given) {
         modifiedProps: new Set(),
         patchedProps: new Set(),
         deletedProps: new Set()
-    });
+    };
 
-    return new Proxy(key, ObjectHandler);
+    return new Proxy(meta, ObjectHandler);
 }
 
 function realize(given) {
