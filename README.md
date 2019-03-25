@@ -100,22 +100,22 @@ Run them for yourself with: `npm run benchmark`
 
 This test simulates the real-world use case of adding small changes over time to a given object. 1000 such changes are made, each to a freshly cloned object. This is similar to how you might use cloning with a library such as [redux](https://redux.js.org/).
 
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| spread-incremental                 |           1.69 |       7.45157 |                  13.93 |                1.06188 |                 0 |                 9 |
-| mediary-produce-incremental        |           8.48 |      17.23819 |                   8.78 |                3.87202 |                 1 |                 4 |
-| mediary-clone-incremental          |           8.44 |      17.34739 |                   8.84 |                4.00099 |                 1 |                 4 |
-| immer-incremental                  |           8.00 |     397.00700 |                 194.48 |                7.80491 |                 0 |                55 |
+| Test Label                         | Duration (MS) | Heap Used (MB) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ---------------------------------- | ------------: | -------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| spread-incremental                 |       7.03947 |           1.97 |                  13.93 |                0.90412 |                 0 |                 9 |
+| mediary-clone-incremental          |      12.39912 |           0.32 |                   5.83 |                0.44344 |                 0 |                 5 |
+| mediary-produce-incremental        |      12.47772 |           0.37 |                   5.83 |                0.50751 |                 0 |                 5 |
+| immer-incremental                  |     396.31582 |           8.00 |                 194.48 |                7.09438 |                 0 |                55 |
 
 # Incremental Changes (in a single pass)
 
 This test simulates the real-world use case of adding lots of small changes to a given object in a single pass. 1000 such changes are made to a single cloned object.
 
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| mediary-clone-incremental-single   |           0.37 |       3.44805 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-produce-incremental-single |           0.38 |       3.71879 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-incremental-single           |           1.32 |       5.58536 |                   0.00 |                0.00000 |                 0 |                 0 |
+| Test Label                         | Duration (MS) | Heap Used (MB) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ---------------------------------- | ------------: | -------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| mediary-clone-incremental-single   |       3.12984 |           0.37 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-produce-incremental-single |       3.60566 |           0.38 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-incremental-single           |       5.59653 |           1.07 |                   0.00 |                0.00000 |                 0 |                 0 |
 
 # Object Creation
 
@@ -131,12 +131,12 @@ Four clone implementations are tested:
    * `JSON.parse(JSON.stringify(data))`
    * `deepClone(data)` (see [./bench/deepclone-create](./bench/deepclone-create) for implementation)
 
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| immer-leak                         |           0.98 |       2.24051 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-clone-leak                 |           3.04 |      10.79104 |                  -0.48 |                0.86122 |                 0 |                 2 |
-| stringify-leak                     |         146.26 |    1903.46948 |                 439.96 |               34.80431 |                 3 |                45 |
-| deepclone-leak                     |         195.75 |    2171.71767 |                 797.50 |              131.89580 |                 6 |                65 |
+| Test Label                         | Duration (MS) | Heap Used (MB) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ---------------------------------- | ------------: | -------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| immer-leak                         |       2.22033 |           0.98 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-clone-leak                 |      10.65097 |           2.94 |                  -0.52 |                1.05216 |                 0 |                 2 |
+| stringify-leak                     |    1944.64302 |         146.26 |                 439.49 |               33.90690 |                 3 |                45 |
+| deepclone-leak                     |    2211.25860 |         195.71 |                 797.54 |              131.44911 |                 6 |                65 |
 
 # Property Get
 
@@ -144,12 +144,12 @@ This test reads every leaf on the large test object 1000 times.
 
 Test data is a large single object (377 KB).
 
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| native-read                        |           1.04 |       7.17858 |                   0.00 |                0.00000 |                 0 |                 0 |
-| proxy-read                         |           1.01 |       9.68881 |                   0.00 |                0.00000 |                 0 |                 0 |
-| immer-read                         |           3.24 |    1604.75321 |                 570.51 |               13.29892 |                 0 |               147 |
-| mediary-clone-read                 |           2.84 |    1721.76706 |                  46.37 |                2.78501 |                 0 |                14 |
+| Test Label                         | Duration (MS) | Heap Used (MB) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ---------------------------------- | ------------: | -------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| native-read                        |       6.78493 |           1.04 |                   0.00 |                0.00000 |                 0 |                 0 |
+| proxy-read                         |       9.47038 |           1.00 |                   0.00 |                0.00000 |                 0 |                 0 |
+| immer-read                         |    1579.61673 |           3.23 |                 570.50 |               14.19201 |                 0 |               147 |
+| mediary-clone-read                 |    1653.33882 |           2.49 |                  46.59 |                2.74192 |                 0 |                14 |
 
 # Property Set
 
@@ -157,11 +157,11 @@ This test set a new value to every leaf on the large test object 1000 times.
 
 Test data is a large single object (377 KB).
 
-| Test Label                         | Heap Used (MB) | Duration (MS) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
-| ---------------------------------- | -------------: | ------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
-| native-write                       |          17.77 |    1383.08516 |                   0.00 |                0.00000 |                 0 |                 0 |
-| mediary-clone-write                |          16.83 |    4823.60701 |                5699.19 |              266.50205 |                 1 |               469 |
-| immer-write                        |           9.98 |    5503.34177 |                2895.60 |               89.49375 |                 0 |               208 |
+| Test Label                         | Duration (MS) | Heap Used (MB) | GC Collected Heap (MB) | GC Pause Duration (MS) | GC Events (major) | GC Events (minor) |
+| ---------------------------------- | ------------: | -------------: | ---------------------: | ---------------------: | ----------------: | ----------------: |
+| native-write                       |    1435.62181 |          17.45 |                   0.00 |                0.00000 |                 0 |                 0 |
+| mediary-clone-write                |    4821.19282 |          15.71 |                5698.81 |              272.88216 |                 1 |               470 |
+| immer-write                        |    5458.26703 |           9.72 |                2895.88 |               83.06379 |                 0 |               208 |
 
 # License
 
