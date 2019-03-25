@@ -2,6 +2,8 @@
 
 > Mediary implements structural sharing via proxies in order to provide a transparent virtualization for deep cloning.
 
+[![Version](https://img.shields.io/npm/v/mediary.svg)]() [![Travis](https://img.shields.io/travis/machellerogden/mediary.svg)]() [![License](https://img.shields.io/npm/l/mediary.svg)]()
+
 Use Mediary's `clone` function to get an object representation which, for all intents and purposes, acts like a deeply cloned copy of your original data.
 
 Getting and setting values on this object works natively. You're free to interact as you would with any normal object.
