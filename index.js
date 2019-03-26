@@ -90,17 +90,17 @@ const ObjectHandler = {
         if (prop === Sym) return true;
         if (prop === SymMeta) return meta;
         if (meta.deletedProps.has(prop)) return nil;
-        if (meta.patchedProps.has(prop)) return Reflect.get(meta.patch, prop, meta.patch);
+        if (meta.patchedProps.has(prop)) return Reflect.get(meta.patch, prop);
         if (meta.givenProps.has(prop)) {
             meta.patchedProps.add(prop);
             return meta.patch[prop] = mediary(meta.target[prop]);
         }
-        return Reflect.get(meta.target, prop, meta.target);
+        return Reflect.get(meta.target, prop);
     },
 
     set (meta, prop, value, receiver) {
         addPatch(meta, prop);
-        return Reflect.set(meta.patch, prop, value, meta.patch);
+        return Reflect.set(meta.patch, prop, value);
     }
 };
 
