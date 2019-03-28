@@ -81,7 +81,7 @@ const ObjectHandler = {
             ? Reflect.getOwnPropertyDescriptor(meta.patch, prop)
             : Reflect.getOwnPropertyDescriptor(meta.target, prop);
 
-        return desc && !meta.deletedProps.has(prop)
+        return desc
             ? { ...desc, writable: true, configurable: true }
             : nil;
     },
