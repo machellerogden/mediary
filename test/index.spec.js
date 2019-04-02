@@ -1,7 +1,10 @@
 'use strict';
 
 import test from 'ava';
-import { clone, Sym, SymMeta } from '.';
+
+(async () => {
+
+const { clone, Sym, SymMeta } = await import(process.env.USE_SRC ? '../src/index' : '../dist/index');
 
 test('basics shallow', t => {
     const foo = {
@@ -786,3 +789,5 @@ test('cloning clones 2', t => {
     t.deepEqual(xyzzy[SymMeta].patch, { h: 'h' });
     t.deepEqual(foo.a, xyzzy.a);
 });
+
+})();

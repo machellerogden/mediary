@@ -2,9 +2,11 @@
   "name": "mediary",
   "version": "0.2.11",
   "description": "An object immutability helper",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "ava index.spec.js",
+    "build": "webpack --mode production",
+    "pretest": "npm run build",
+    "test": "ava test/*.spec.js",
     "benchmark": "hbu './bench/tests/**/*.js' --times 1000 --gc-stats"
   },
   "keywords": [
@@ -22,10 +24,25 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
     "ava": "^1.2.1",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-dynamic-import-node": "^2.2.0",
+    "babel-preset-minify": "^0.5.0",
     "hbu": "^0.3.2",
     "immer": "^2.1.1",
-    "markdown-table": "^1.1.2"
+    "markdown-table": "^1.1.2",
+    "pre-commit": "^1.2.2",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
   },
+  "engines": {
+    "node": ">=10.15.0",
+    "npm": ">=6.0.0"
+  },
+  "precommit": [
+    "test"
+  ],
   "dependencies": {}
 }
