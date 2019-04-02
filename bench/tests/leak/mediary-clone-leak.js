@@ -2,7 +2,7 @@
 
 const { start, end, times } = require('hbu');
 
-const { clone } = require('../../..');
+const { clone } = require('../../../dist');
 const data = require('../../data');
 
 const leak = [];

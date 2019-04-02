@@ -2,7 +2,7 @@
 
 const { start, end, times } = require('hbu');
 
-const { produce } = require('../../..');
+const { produce } = require('../../../dist');
 
 let data = {
     ids: [],

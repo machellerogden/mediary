@@ -30,7 +30,7 @@
     "babel-loader": "^8.0.5",
     "babel-plugin-dynamic-import-node": "^2.2.0",
     "babel-preset-minify": "^0.5.0",
-    "hbu": "^0.3.2",
+    "hbu": "^0.3.3",
     "immer": "^2.1.1",
     "markdown-table": "^1.1.2",
     "pre-commit": "^1.2.2",
