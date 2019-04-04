@@ -4,7 +4,7 @@ import test from 'ava';
 
 (async () => {
 
-const { clone, Sym, SymMeta } = await import(process.env.USE_SRC ? '../src/index' : '../dist/index');
+const { clone, Sym, SymMeta } = await import(process.env.USE_SRC ? '../src/index' : '../dist/mediary');
 
 test('basics shallow', t => {
     const foo = {

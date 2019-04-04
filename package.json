@@ -2,7 +2,7 @@
   "name": "mediary",
   "version": "0.3.1",
   "description": "An object immutability helper",
-  "main": "dist/index.js",
+  "main": "dist/mediary.js",
   "scripts": {
     "build": "webpack --mode production",
     "pretest": "npm run build",

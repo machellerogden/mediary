@@ -7,7 +7,8 @@ module.exports = {
         globalObject: 'this',
         library: 'mediary',
         libraryTarget: 'umd',
-        filename: 'index.js'
+        umdNamedDefine: true,
+        filename: 'mediary.js'
     },
     module: {
         rules: [
