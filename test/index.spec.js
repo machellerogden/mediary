@@ -790,4 +790,12 @@ test('cloning clones 2', t => {
     t.deepEqual(foo.a, xyzzy.a);
 });
 
+test('shaking out edge cases', t => {
+    const blah = {};
+    [ 'reduce' ].forEach(k => blah[k] = (v, ...args) => [][k].apply(clone(v) || [], args.map(clone)));
+    const foo = [ { a: { b: [ { c: { d: 'd' } } ] } } ];
+    const bar = blah.reduce(foo, (acc, v, k, i) => (acc[k] = v, acc), []);
+    t.deepEqual(foo, bar);
+});
+
 })();

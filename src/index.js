@@ -54,11 +54,11 @@ const ObjectHandler = {
     },
 
     getPrototypeOf (meta) {
-        return Reflect.getPrototypeOf(meta.patch);
+        return Object.prototype;
     },
 
     setPrototypeOf (meta) {
-        return Reflect.setPrototypeOf(meta.patch);
+        return true;
     },
 
     deleteProperty (meta, prop) {
