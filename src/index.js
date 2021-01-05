@@ -118,12 +118,12 @@ function rmPatch(meta, prop) {
     meta.patchedProps.delete(prop);
 }
 
-function mediary(given) {
+function mediary(given, freeze = true) {
     if (given == null
         || typeof given !== 'object'
         || given[Sym]) return given;
 
-    deepFreeze(given);
+    if (freeze) deepFreeze(given);
 
     if (Array.isArray(given)) return new Proxy([ ...given ], ArrayHandler);
 
@@ -174,14 +174,14 @@ function realize(given) {
     return result;
 }
 
-exports.clone = given => mediary(realize(given));
+exports.clone = (given, freeze = true) => mediary(realize(given), freeze);
 exports.Sym = Sym;
 exports.SymMeta = SymMeta;
 
 // `produce` is a drop-in replacement for immer `produce`.
 // This function provides a possible migration path.
-exports.produce = (given, fn) => {
-    const cloned = mediary(realize(given));
+exports.produce = (given, fn, freeze = true) => {
+    const cloned = mediary(realize(given), freeze);
     fn(cloned);
     return cloned;
 };
